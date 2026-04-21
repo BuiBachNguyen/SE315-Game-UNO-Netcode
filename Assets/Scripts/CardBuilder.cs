@@ -86,6 +86,11 @@ public static class CardBuilder
      
         if (cardGameObject != null)
         {
+            if (cardGameObject.GetActionTypes() == null)
+            {
+                cardGameObject.SetDrawAmount(-1);
+                return false;
+            }
             if (cardGameObject.GetActionTypes().Contains(ActionType.Draw))
             {
                 cardGameObject.SetDrawAmount(amount);
