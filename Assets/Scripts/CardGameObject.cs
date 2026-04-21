@@ -1,14 +1,38 @@
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 
-[CreateAssetMenu(fileName = "New Card", menuName = "Card")]
-public class Card : ScriptableObject
+public class CardGameObject : MonoBehaviour
 {
     [SerializeField] private CardColor color;
     [SerializeField] private CardType type;
     [SerializeField] private int number;
     [SerializeField] private List<ActionType> actionTypes;
     [SerializeField] private int drawAmount;
+
+    public void SetColor(CardColor color)
+    {
+        this.color = color;
+    }
+
+    public void SetType(CardType type)
+    {
+            this.type = type;
+    }
+
+    public void SetNumber(int number)
+    {
+        this.number = number;
+    }
+
+    public void SetActionTypes(List<ActionType> actionTypes)
+    {
+        this.actionTypes = actionTypes;
+    }
+
+    public void SetDrawAmount(int drawAmount)
+    {
+        this.drawAmount = drawAmount;
+    }
 
     public CardColor GetColor()
     {
