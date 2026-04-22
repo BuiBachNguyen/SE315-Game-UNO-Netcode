@@ -5,7 +5,7 @@ public class CardReference : MonoBehaviour
 {
     [SerializeField] private List<Card> cards;
     [SerializeField] private List<ReferencePair> cardDictionary;
-
+    
     private static CardReference __instance;
     public static CardReference Instance
     {
@@ -16,13 +16,26 @@ public class CardReference : MonoBehaviour
                 __instance = FindAnyObjectByType<CardReference>();
                 if (__instance == null)
                 {
-                    Debug.LogError("No CardReference instance found in the scene.");
+                    GameObject obj = new GameObject("CardRef");
+                    __instance = obj.AddComponent<CardReference>();
                 }
                 DontDestroyOnLoad(__instance.gameObject);
             }
             return __instance;
         }
     }
+
+    private void Awake()
+    {
+        if (__instance != null && __instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        __instance = this;
+        DontDestroyOnLoad(gameObject);
+    }
+
     private void OnValidate()
     {
         cardDictionary = new List<ReferencePair>();
