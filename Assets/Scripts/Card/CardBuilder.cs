@@ -74,7 +74,15 @@ public static class CardBuilder
         {
             if (cardGameObject.GetCardType() == CardType.Action)
             {
-                cardGameObject.SetActionTypes(action);
+                if (action.Count > 0)
+                {
+                    if (action.Contains(ActionType.Skip))
+                    {
+                        cardGameObject.SetActionTypes(new List<ActionType> { ActionType.Skip });
+                        return true;
+                    }
+                    cardGameObject.SetActionTypes(action);
+                }
                 return true;
             }
         }
