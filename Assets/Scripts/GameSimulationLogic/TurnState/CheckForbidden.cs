@@ -9,7 +9,6 @@ public class CheckForbidden : TurnState
 
     public override void SetUpTurnState()
     {
-        throw new System.NotImplementedException();
     }
 
     public override void TurnUpdate()
@@ -21,7 +20,7 @@ public class CheckForbidden : TurnState
         }
         else
         {
-            //Go to next phase
+            ProcessNextPhase();
         }
     }
 }

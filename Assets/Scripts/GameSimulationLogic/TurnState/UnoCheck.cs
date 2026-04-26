@@ -19,7 +19,7 @@ public class UnoCheck : TurnState
         GameManager.Instance.GetTurnManager().GetTimer().TurnOn();
         if (GameManager.Instance.GetTurnManager().GetTimer().IsTimeUp())
         {
-            //DrawCard(2);
+            GameManager.Instance.GetDeck().DrawCard(2);
             GameManager.Instance.GetTurnManager().SetCurrentDrawAmount(0);
             GameManager.Instance.GetTurnManager().GoNextTurn();
         }

@@ -2,6 +2,13 @@ using NUnit.Framework;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum ShuffleBackResult
+{
+    Success,
+    PlayZoneNotEnough,
+    Failed
+}
+
 public class Deck : MonoBehaviour
 {
     [SerializeField] private List<CardQuantity> cardQuantities;
@@ -13,17 +20,33 @@ public class Deck : MonoBehaviour
         {
             for (int i = 0; i < cardQuantity.quantity; i++)
             {
-                cardGameObjects.Add(CardBuilder.GetCard(cardQuantity.card).GetComponent<CardGameObject>());
+                CardGameObject card = CardBuilder.GetCard(cardQuantity.card).GetComponent<CardGameObject>();
+                cardGameObjects.Add(card);
+                card.gameObject.transform.SetParent(GameManager.Instance.GetCardHolder().gameObject.transform);
             }
         }
+    }
+
+    private void Awake()
+    {
+        BuildDeck();
     }
 
     public List<CardGameObject> DrawCard(int quantity)
     {
         if (quantity > cardGameObjects.Count)
         {
-            Debug.LogWarning("Not enough cards in the deck!");
-            return null;
+            ShuffleBackResult result = ShuffleBack(quantity);
+            if (result == ShuffleBackResult.PlayZoneNotEnough)
+            {
+                Debug.LogWarning("Not enough cards in the played zone to shuffle back!Checking Winning");
+                return new List<CardGameObject>();
+            }
+            else if (result == ShuffleBackResult.Failed)
+            {
+                Debug.LogError("Failed to shuffle back cards!");
+                return new List<CardGameObject>();
+            }
         }
 
         List<CardGameObject> drawnCards = new List<CardGameObject>();
@@ -38,21 +61,24 @@ public class Deck : MonoBehaviour
         return drawnCards;
     }
 
-    public void ShuffleBack(List<CardGameObject> cards)
+    public ShuffleBackResult ShuffleBack(int drawquantity)
     {
+        List<CardGameObject> cards= GameManager.Instance.GetPlayedZone().GetPlayedCards();
         if (cards==null)
         {
             Debug.LogError("Cannot shuffle back null cards!");
-            return;
+            return ShuffleBackResult.Failed;
         }
 
-        if (cards.Count == 0)
+        if (cards.Count + cardGameObjects.Count < drawquantity)
         {
             // No cards to shuffle back, so we can call end match and count player card to determine the winner
-            return;
+            return ShuffleBackResult.PlayZoneNotEnough;
         }
 
+        GameManager.Instance.GetPlayedZone().ClearPlayedCard();
         cardGameObjects.AddRange(cards);
+        return ShuffleBackResult.Success;
     }
 }
 

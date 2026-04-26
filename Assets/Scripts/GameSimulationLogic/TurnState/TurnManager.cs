@@ -10,6 +10,13 @@ public class TurnManager : MonoBehaviour
     private TurnData currentTurnData;
     private int CurrentDrawAmount=0;
 
+    public void Awake()
+    {
+        timer = new Timer(waitingTime);
+        currentTurnState = new CheckForbidden();
+        currentTurnState.SetUpTurnState();
+    }
+
     public void GoNextTurn()
     {
         currentTurnData.PlayerId = (currentTurnData.PlayerId + 1) % 4; // Assuming 4 player
@@ -45,7 +52,7 @@ public class TurnManager : MonoBehaviour
 
     void Start()
     {
-
+       
     }
 
 

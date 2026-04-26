@@ -20,11 +20,11 @@ public class PlayingPhase : TurnState
             //Auto Draw, if current game draw amount =0 draw 1, else draw same amount as current draw amount,set amount to 0, then go next phase
             if (GameManager.Instance.GetTurnManager().GetCurrentDrawAmount() == 0)
             {
-                //DrawCard(1);
+                GameManager.Instance.GetDeck().DrawCard(1);
             }
             else
             {
-                //DrawCard(GameManager.Instance.GetCurrentDrawAmount());
+                GameManager.Instance.GetDeck().DrawCard(GameManager.Instance.GetTurnManager().GetCurrentDrawAmount());
             }
             GameManager.Instance.GetTurnManager().SetCurrentDrawAmount(0);
             GameManager.Instance.GetTurnManager().GoNextTurn();

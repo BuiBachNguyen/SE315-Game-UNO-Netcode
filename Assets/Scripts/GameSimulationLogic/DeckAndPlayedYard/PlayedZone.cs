@@ -16,9 +16,8 @@ public class PlayedZone : MonoBehaviour
         return playedCards;
     }
 
-    public void ShuffleBack()
+    public void ClearPlayedCard()
     {
-        GameManager.Instance.GetDeck().ShuffleBack(playedCards);
         playedCards.Clear();
     }
 

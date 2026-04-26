@@ -6,6 +6,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TurnManager turnManager;
     [SerializeField] private Deck deck;
     [SerializeField] private PlayedZone playedZone;
+    [SerializeField] private CardHolder cardHolder;
     public static GameManager Instance
     {
         get
@@ -38,6 +39,10 @@ public class GameManager : MonoBehaviour
         {
             Debug.LogError("TurnManager reference is not set in GameManager!");
         }
+        if (cardHolder == null)
+        {
+            Debug.LogError("CardHolder reference is not set in GameManager!");
+        }
     }
 
     public TurnManager GetTurnManager()
@@ -53,5 +58,10 @@ public class GameManager : MonoBehaviour
     public PlayedZone GetPlayedZone()
     {
         return playedZone;
+    }
+
+    public CardHolder GetCardHolder()
+    {
+        return cardHolder;
     }
 }
