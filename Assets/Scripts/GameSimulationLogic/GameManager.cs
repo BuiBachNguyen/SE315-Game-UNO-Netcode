@@ -24,6 +24,22 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void Awake()
+    {
+        if (playedZone == null)
+        {
+            Debug.LogError("PlayedZone reference is not set in GameManager!");
+        }
+        if (deck == null)
+        {
+            Debug.LogError("Deck reference is not set in GameManager!");
+        }
+        if (turnManager == null)
+        {
+            Debug.LogError("TurnManager reference is not set in GameManager!");
+        }
+    }
+
     public TurnManager GetTurnManager()
     {
         return turnManager;
