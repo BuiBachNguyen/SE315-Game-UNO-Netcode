@@ -69,6 +69,12 @@ public class CardGameObject : MonoBehaviour
             drawAmount = this.drawAmount
         };
     }
+
+    public bool IsPlayableOn(CardGameObject topCard)
+    {
+        // A card is playable if it matches the color, type, or number of the top card
+        return false; // Placeholder for actual logic
+    }
 }
 
 public struct CardData
