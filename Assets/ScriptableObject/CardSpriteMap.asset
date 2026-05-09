@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68c70aa02f292f842a903524dff92f05, type: 3}
+  m_Name: CardSpriteMap
+  m_EditorClassIdentifier: Assembly-CSharp::CardSpriteMap
+  colorSets:
+  - color: 0
+    numberSprites:
+    - {fileID: -249377125660422933, guid: 1611721e637cc08448a3968c567de1e7, type: 3}
+    - {fileID: 1576479164325655169, guid: 5d68456099cac0048846ca1ee7b5629d, type: 3}
+    - {fileID: -2365338978563116705, guid: 7ce088e35bdd26a4cb7d340e72ec61d3, type: 3}
+    - {fileID: -6321854236844008304, guid: 941ffae7f38c41e479012a924efb70b3, type: 3}
+    - {fileID: -4914693277832164576, guid: f0ab95582c3d7254aa6706e8a336a94e, type: 3}
+    - {fileID: 8483853964939581952, guid: ba5d55fd8d2d91f43bfe8ec16cf16e9f, type: 3}
+    - {fileID: -4089122939457186537, guid: 27e8ad0e468ddac4d932d9eddadde121, type: 3}
+    - {fileID: -6759601388867490596, guid: 660f9cc966a264b4985d004ed8491553, type: 3}
+    - {fileID: 8845331677307679681, guid: fbf25cc70857de542b30b3a94135c3e6, type: 3}
+    - {fileID: 6399637197865078450, guid: 1edbfab17622ace4d9d1df15016b2cb1, type: 3}
+    skip: {fileID: 967024464312591397, guid: ad67057a4752d9f49a65e0c15ce27731, type: 3}
+    reverse: {fileID: 3980819785295770609, guid: 1fd335b5ada79c44296b992c39759b2f, type: 3}
+    drawTwo: {fileID: 6034302415352301069, guid: 2e4ecdbaa2a7dce46a1be25f6b1caa7a, type: 3}
+  - color: 1
+    numberSprites:
+    - {fileID: 5413057936140843819, guid: ce569c6817cb26645898f01a21768d54, type: 3}
+    - {fileID: 949571133561506956, guid: c6cd1cb466349b546ac25fcf05d733b5, type: 3}
+    - {fileID: 1212900621034218311, guid: 4d49237a0abe84f4097a1067d9b90405, type: 3}
+    - {fileID: -5347480379674745182, guid: 5641669ee8b6b91408e73599639dbfc5, type: 3}
+    - {fileID: -5369153306969932305, guid: 08d8d8c0d76fe36408d2307cf1d9aa54, type: 3}
+    - {fileID: 8374039875516635433, guid: d0dc6b631b5a3a8418292e23f26c6780, type: 3}
+    - {fileID: -4485866815172015416, guid: 8aaabf7aa6405304fa388cee844f231f, type: 3}
+    - {fileID: 254052604707246049, guid: 208337ca0e644ab41bcf2ffd3e3c7f4f, type: 3}
+    - {fileID: -7954603889195718701, guid: 3de924e08b55d4443b4b555fc4d934af, type: 3}
+    - {fileID: 1952660869571585519, guid: fd26e9c47ad37804a88c8dd1444da7d9, type: 3}
+    skip: {fileID: 7290285905077853348, guid: c86f6029728d4af41b11ebef79f8b011, type: 3}
+    reverse: {fileID: -542805743920920896, guid: 79ccd5e9b9dc97247b538e3e98891f49, type: 3}
+    drawTwo: {fileID: -1180534548793129568, guid: b518da4a55f3cc8419035ce6bd7248f5, type: 3}
+  - color: 2
+    numberSprites:
+    - {fileID: 371394097520866409, guid: 6a20cb0f5c26ce148b8f799dc0e5c885, type: 3}
+    - {fileID: 2114939304942317460, guid: d27bd4d76f998ff429ccf7e328eb4513, type: 3}
+    - {fileID: 4456493401876371339, guid: a09a4cbdcc2b9b0488ed8ad5cb0f24dc, type: 3}
+    - {fileID: -7882214922087695536, guid: aa673520339389a49a7d36354947238d, type: 3}
+    - {fileID: 6088028037226107009, guid: 1b8162eb19412cf459a7a63f6af2ec91, type: 3}
+    - {fileID: 8183703129083708372, guid: 847bb011249f74c4cb47bd63eebc288b, type: 3}
+    - {fileID: 1035811146341020437, guid: 869633a5feb6666458567fac0e5a7a58, type: 3}
+    - {fileID: 4360157255746360584, guid: 38444670bdf9b1a4db3c621befc814d5, type: 3}
+    - {fileID: 9132625577407226825, guid: 7d0d3b61262963a4885ec6bd4297bc61, type: 3}
+    - {fileID: 5372860851645618649, guid: ad94ace96b3cb0d42bf8fa6ea7d6d09e, type: 3}
+    skip: {fileID: 8388043952071202886, guid: 00a6e1ce3ec078249aced716c0931fdf, type: 3}
+    reverse: {fileID: -2219656360009797627, guid: 6faa9a40530a7f740b8acfdce427e314, type: 3}
+    drawTwo: {fileID: 3511473552175745994, guid: 8e29a6a4e44706648871707cc0580262, type: 3}
+  - color: 3
+    numberSprites:
+    - {fileID: 5201935992892929278, guid: 71da65bbc978ef145b7c641c8886649e, type: 3}
+    - {fileID: 907551023205933793, guid: 65a82814358263548bcb855074ec2595, type: 3}
+    - {fileID: 905343303613391907, guid: 53b0e917b5e3e9e4db8f411e291debd6, type: 3}
+    - {fileID: -5115539418987943757, guid: 2d54a44b35f7edd428f62df85b3798ed, type: 3}
+    - {fileID: -4419887164915058262, guid: 8869c84eb6bb6d34e96baad20d2f8999, type: 3}
+    - {fileID: 8665045479233666032, guid: 7fb6960dfe34a634d945d2d2d2803e90, type: 3}
+    - {fileID: -5211383724408289548, guid: 12639effc6478534187a6fe61d02363f, type: 3}
+    - {fileID: 3255999290681813128, guid: 6e889d61fc9d378408989ef72a20a900, type: 3}
+    - {fileID: 6077699579978341396, guid: 7a0cba8719d41e140a90540fd8127222, type: 3}
+    - {fileID: -5250002230992186834, guid: ff6b6a991dbaad945b3b1d17ce86113e, type: 3}
+    skip: {fileID: 1142084770088579618, guid: 355160b4987707d4b8a87aa5de98f26e, type: 3}
+    reverse: {fileID: 1753169874920166749, guid: c2421ae20202caf42a4779a2d259d920, type: 3}
+    drawTwo: {fileID: 3089904418412147866, guid: 342b5da3c0b55e647884219cd0133b47, type: 3}
+  wild: {fileID: 3773449606348301056, guid: ab3a318b63f405844b1093f523004cd3, type: 3}
+  wildDrawFour: {fileID: 2231887219363489790, guid: 5054285b2b145d44d8f27734f295f4d3, type: 3}
+  cardBack: {fileID: -1558256198040742725, guid: f1c22f589a1b9fd409869585bff5f819, type: 3}
