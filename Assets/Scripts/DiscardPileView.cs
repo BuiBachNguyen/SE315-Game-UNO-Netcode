@@ -27,7 +27,7 @@ public class DiscardPileView : MonoBehaviour
         GameEvents.OnDiscardChanged -= HandleDiscardChanged;
     }
 
-    private void HandleDiscardChanged(Card topCard)
+    private void HandleDiscardChanged(UnoCard topCard)
     {
         if (cardSpriteMap != null && cardImage != null && topCard != null)
         {

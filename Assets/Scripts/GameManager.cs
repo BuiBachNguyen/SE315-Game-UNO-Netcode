@@ -23,9 +23,9 @@ public class GameManager : MonoBehaviour, IGameLogic
     [SerializeField] private int matchPointTarget = 500;
     [SerializeField] private float aiTurnDelaySeconds = 0.6f;
 
-    private readonly List<List<Card>> hands = new List<List<Card>>();
-    private readonly List<Card> drawPile = new List<Card>();
-    private readonly List<Card> discardPile = new List<Card>();
+    private readonly List<List<UnoCard>> hands = new List<List<UnoCard>>();
+    private readonly List<UnoCard> drawPile = new List<UnoCard>();
+    private readonly List<UnoCard> discardPile = new List<UnoCard>();
     private readonly Dictionary<int, int> matchScores = new Dictionary<int, int>();
     private readonly HashSet<int> unoCalledThisTurn = new HashSet<int>();
 
@@ -34,7 +34,7 @@ public class GameManager : MonoBehaviour, IGameLogic
     private CardColor currentColor = CardColor.Red;
 
     private bool waitingForWildColor;
-    private Card pendingWildCard;
+    private UnoCardpendingWildCard;
     private int pendingWildPlayer = -1;
 
     private Coroutine aiTurnRoutine;
@@ -67,7 +67,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         StartRound();
     }
 
-    public bool IsValidPlay(Card card)
+    public bool IsValidPlay(UnoUnoCard card)
     {
         if (!IsLocalPlayersTurn())
         {
@@ -77,14 +77,14 @@ public class GameManager : MonoBehaviour, IGameLogic
         return IsValidPlayForPlayer(card, localPlayerIndex);
     }
 
-    private bool IsValidPlayForPlayer(Card card, int playerIndex)
+    private bool IsValidPlayForPlayer(UnoUnoCard card, int playerIndex)
     {
         if (card == null || waitingForWildColor)
         {
             return false;
         }
 
-        Card top = GetTopDiscard();
+        UnoCard top = GetTopDiscard();
         if (top == null)
         {
             return true;
@@ -155,7 +155,7 @@ public class GameManager : MonoBehaviour, IGameLogic
 
         for (int i = 0; i < playerCount; i++)
         {
-            hands.Add(new List<Card>());
+            hands.Add(new List<UnoCard>());
         }
 
         BuildDeck(drawPile);
@@ -166,7 +166,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         TryRunAiTurn();
     }
 
-    private void BuildDeck(List<Card> deck)
+    private void BuildDeck(List<UnoCard> deck)
     {
         deck.Clear();
         CardColor[] colors = { CardColor.Red, CardColor.Green, CardColor.Blue, CardColor.Yellow };
@@ -210,7 +210,7 @@ public class GameManager : MonoBehaviour, IGameLogic
 
     private void StartDiscardPile()
     {
-        Card first = DrawOneFromDeck();
+        UnoCard first = DrawOneFromDeck();
         while (first != null && (first.Type == CardType.Wild || first.Type == CardType.WildDrawFour))
         {
             drawPile.Add(first);
@@ -248,15 +248,15 @@ public class GameManager : MonoBehaviour, IGameLogic
         }
     }
 
-    private void HandleCardPlayed(Card playedCard)
+    private void HandleCardPlayed(UnoCard playedCard)
     {
         if (playedCard == null || waitingForWildColor || !IsLocalPlayersTurn())
         {
             return;
         }
 
-        List<Card> localHand = hands[localPlayerIndex];
-        Card handCard = FindAndRemoveCard(localHand, playedCard);
+        List<UnoCard> localHand = hands[localPlayerIndex];
+        UnoCard handCard = FindAndRemoveCard(localHand, playedCard);
         if (handCard == null || !IsValidPlayForPlayer(handCard, localPlayerIndex))
         {
             if (handCard != null)
@@ -270,7 +270,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         ProcessPlayedCard(localPlayerIndex, handCard);
     }
 
-    private void ProcessPlayedCard(int playerIndex, Card playedCard)
+    private void ProcessPlayedCard(int playerIndex, UnoCard playedCard)
     {
         discardPile.Add(playedCard);
         currentColor = playedCard.Type == CardType.Wild || playedCard.Type == CardType.WildDrawFour
@@ -323,7 +323,7 @@ public class GameManager : MonoBehaviour, IGameLogic
             return;
         }
 
-        Card drawn = DrawOneToHand(localPlayerIndex);
+        UnoCard drawn = DrawOneToHand(localPlayerIndex);
         if (drawn == null)
         {
             return;
@@ -357,7 +357,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         currentColor = selectedColor;
         GameEvents.RaiseColorChanged(currentColor);
 
-        Card wildCard = pendingWildCard;
+        UnoCard wildCard = pendingWildCard;
         pendingWildCard = null;
         pendingWildPlayer = -1;
 
@@ -406,7 +406,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         StartRound();
     }
 
-    private void AdvanceTurnByCardEffect(Card playedCard)
+    private void AdvanceTurnByCardEffect(UnoCard playedCard)
     {
         if (playedCard.Type == CardType.Reverse)
         {
@@ -463,12 +463,12 @@ public class GameManager : MonoBehaviour, IGameLogic
         yield return new WaitForSeconds(aiTurnDelaySeconds);
 
         int aiIndex = currentPlayerIndex;
-        List<Card> aiHand = hands[aiIndex];
-        Card playable = FindFirstPlayable(aiHand, aiIndex);
+        List<UnoCard> aiHand = hands[aiIndex];
+        UnoCard playable = FindFirstPlayable(aiHand, aiIndex);
 
         if (playable == null)
         {
-            Card drawn = DrawOneToHand(aiIndex);
+            UnoCard drawn = DrawOneToHand(aiIndex);
             NotifyHandSizeChanged(aiIndex);
 
             if (drawn != null && IsValidPlayForPlayer(drawn, aiIndex))
@@ -491,7 +491,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         aiTurnRoutine = null;
     }
 
-    private Card FindFirstPlayable(List<Card> hand, int playerIndex)
+    private UnoCardFindFirstPlayable(List<UnoCard> hand, int playerIndex)
     {
         for (int i = 0; i < hand.Count; i++)
         {
@@ -512,7 +512,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         for (int i = 0; i < playerCount; i++)
         {
             int playerScore = 0;
-            List<Card> hand = hands[i];
+            List<UnoCard> hand = hands[i];
             for (int c = 0; c < hand.Count; c++)
             {
                 playerScore += GetCardPoints(hand[c]);
@@ -534,7 +534,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         }
     }
 
-    private static int GetCardPoints(Card card)
+    private static int GetCardPoints(UnoCard card)
     {
         if (card == null)
         {
@@ -576,7 +576,7 @@ public class GameManager : MonoBehaviour, IGameLogic
 
     private void BroadcastLocalHand()
     {
-        GameEvents.RaiseHandUpdated(new List<Card>(hands[localPlayerIndex]));
+        GameEvents.RaiseHandUpdated(new List<UnoCard>(hands[localPlayerIndex]));
     }
 
     private void BroadcastTurnState()
@@ -620,9 +620,9 @@ public class GameManager : MonoBehaviour, IGameLogic
         currentPlayerIndex = Mod(currentPlayerIndex + (direction * steps), playerCount);
     }
 
-    private Card DrawOneToHand(int playerIndex)
+    private UnoCardDrawOneToHand(int playerIndex)
     {
-        Card drawn = DrawOneFromDeck();
+        UnoCard drawn = DrawOneFromDeck();
         if (drawn == null)
         {
             return null;
@@ -644,7 +644,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         }
     }
 
-    private Card DrawOneFromDeck()
+    private UnoCardDrawOneFromDeck()
     {
         if (drawPile.Count == 0)
         {
@@ -657,7 +657,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         }
 
         int last = drawPile.Count - 1;
-        Card card = drawPile[last];
+        UnoCard card = drawPile[last];
         drawPile.RemoveAt(last);
         return card;
     }
@@ -669,7 +669,7 @@ public class GameManager : MonoBehaviour, IGameLogic
             return;
         }
 
-        Card top = discardPile[discardPile.Count - 1];
+        UnoCard top = discardPile[discardPile.Count - 1];
         discardPile.RemoveAt(discardPile.Count - 1);
 
         drawPile.AddRange(discardPile);
@@ -678,7 +678,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         Shuffle(drawPile);
     }
 
-    private Card GetTopDiscard()
+    private UnoCardGetTopDiscard()
     {
         if (discardPile.Count == 0)
         {
@@ -695,7 +695,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         int blue = 0;
         int yellow = 0;
 
-        List<Card> hand = hands[playerIndex];
+        List<UnoCard> hand = hands[playerIndex];
         for (int i = 0; i < hand.Count; i++)
         {
             switch (hand[i].Color)
@@ -738,11 +738,11 @@ public class GameManager : MonoBehaviour, IGameLogic
         return best;
     }
 
-    private static Card FindAndRemoveCard(List<Card> hand, Card target)
+    private static UnoCardFindAndRemoveCard(List<UnoCard> hand, Card target)
     {
         for (int i = 0; i < hand.Count; i++)
         {
-            Card card = hand[i];
+            UnoCard card = hand[i];
             if (IsSameCard(card, target))
             {
                 hand.RemoveAt(i);
@@ -753,7 +753,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         return null;
     }
 
-    private static bool IsSameCard(Card a, Card b)
+    private static bool IsSameCard(UnoCard a, UnoCard b)
     {
         if (a == null || b == null)
         {
@@ -763,9 +763,9 @@ public class GameManager : MonoBehaviour, IGameLogic
         return a.Id == b.Id;
     }
 
-    private static Card CreateNumber(CardColor color, int number)
+    private static UnoCardCreateNumber(CardColor color, int number)
     {
-        return new Card
+        return new UnoCard
         {
             Color = color,
             Type = CardType.Number,
@@ -773,9 +773,9 @@ public class GameManager : MonoBehaviour, IGameLogic
         };
     }
 
-    private static Card CreateAction(CardColor color, CardType type)
+    private static UnoCardCreateAction(CardColor color, CardType type)
     {
-        return new Card
+        return new UnoCard
         {
             Color = color,
             Type = type,
@@ -783,9 +783,9 @@ public class GameManager : MonoBehaviour, IGameLogic
         };
     }
 
-    private static Card CreateWild(CardType type)
+    private static UnoCardCreateWild(CardType type)
     {
-        return new Card
+        return new UnoCard
         {
             Color = CardColor.None,
             Type = type,
@@ -799,12 +799,12 @@ public class GameManager : MonoBehaviour, IGameLogic
         return colors[Random.Range(0, colors.Length)];
     }
 
-    private static void Shuffle(List<Card> cards)
+    private static void Shuffle(List<UnoCard> cards)
     {
         for (int i = cards.Count - 1; i > 0; i--)
         {
             int j = Random.Range(0, i + 1);
-            Card temp = cards[i];
+            UnoCard temp = cards[i];
             cards[i] = cards[j];
             cards[j] = temp;
         }

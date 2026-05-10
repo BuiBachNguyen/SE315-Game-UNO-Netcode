@@ -1,5 +1,5 @@
 public interface IGameLogic
 {
-    bool IsValidPlay(Card card);
+    bool IsValidPlay(UnoCard card);
     bool IsLocalPlayersTurn();
 }

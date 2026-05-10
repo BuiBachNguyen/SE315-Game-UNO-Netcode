@@ -9,12 +9,12 @@ public static class GameEvents
     /// <summary>
     /// Fired when the local player's hand contents change.
     /// </summary>
-    public static event Action<List<Card>> OnHandUpdated;
+    public static event Action<List<UnoCard>> OnHandUpdated;
 
     /// <summary>
     /// Fired when the top card of the discard pile changes.
     /// </summary>
-    public static event Action<Card> OnDiscardChanged;
+    public static event Action<UnoCard> OnDiscardChanged;
 
     /// <summary>
     /// Fired when the active color changes, typically after a Wild is played.
@@ -74,7 +74,7 @@ public static class GameEvents
     /// <summary>
     /// Fired when a card is played from the local player's hand.
     /// </summary>
-    public static event Action<Card> OnCardPlayed;
+    public static event Action<UnoCard> OnCardPlayed;
 
     /// <summary>
     /// Fired when the deck count changes (draw pile size).
@@ -84,7 +84,7 @@ public static class GameEvents
     /// <summary>
     /// Fired when the local player draws a card, with a flag indicating if it is playable.
     /// </summary>
-    public static event Action<Card, bool> OnCardDrawn;
+    public static event Action<UnoCard, bool> OnCardDrawn;
 
     /// <summary>
     /// Fired when the local player requests to draw a card from the deck.
@@ -101,12 +101,12 @@ public static class GameEvents
     /// </summary>
     public static event Action OnRematchRequested;
 
-    public static void RaiseHandUpdated(List<Card> cards)
+    public static void RaiseHandUpdated(List<UnoCard> cards)
     {
         OnHandUpdated?.Invoke(cards);
     }
 
-    public static void RaiseDiscardChanged(Card topCard)
+    public static void RaiseDiscardChanged(UnoCard topCard)
     {
         OnDiscardChanged?.Invoke(topCard);
     }
@@ -166,7 +166,7 @@ public static class GameEvents
         OnCatchUno?.Invoke(opponentIndex);
     }
 
-    public static void RaiseCardPlayed(Card card)
+    public static void RaiseCardPlayed(UnoCard card)
     {
         OnCardPlayed?.Invoke(card);
     }
@@ -176,7 +176,7 @@ public static class GameEvents
         OnDeckCountChanged?.Invoke(count);
     }
 
-    public static void RaiseCardDrawn(Card card, bool isPlayable)
+    public static void RaiseCardDrawn(UnoCard card, bool isPlayable)
     {
         OnCardDrawn?.Invoke(card, isPlayable);
     }

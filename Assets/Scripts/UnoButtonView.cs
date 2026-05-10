@@ -38,7 +38,7 @@ public class UnoButtonView : MonoBehaviour
         GameEvents.OnTurnChanged -= HandleTurnChanged;
     }
 
-    private void HandleHandUpdated(List<Card> cards)
+    private void HandleHandUpdated(List<UnoCard> cards)
     {
         localHandCount = cards != null ? cards.Count : 0;
         RefreshVisual();

@@ -36,7 +36,7 @@ public class HandView : MonoBehaviour
         GameEvents.OnHandUpdated -= HandleHandUpdated;
     }
 
-    private void HandleHandUpdated(List<Card> cards)
+    private void HandleHandUpdated(List<UnoCard> cards)
     {
         // Recycle existing views before creating or reusing new ones.
         for (int i = 0; i < activeViews.Count; i++)
@@ -52,7 +52,7 @@ public class HandView : MonoBehaviour
 
         for (int i = 0; i < cards.Count; i++)
         {
-            Card card = cards[i];
+            UnoCard card = cards[i];
             CardView view = GetFromPool();
             bool playable = gameLogic != null && gameLogic.IsValidPlay(card);
 

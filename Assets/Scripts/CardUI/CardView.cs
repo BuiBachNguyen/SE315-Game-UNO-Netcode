@@ -13,7 +13,7 @@ public class CardView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     [SerializeField] private GameObject tooltipRoot;
     [SerializeField] private TMP_Text tooltipText;
 
-    private Card cardData;
+    private UnoCard cardData;
     private bool isPlayable;
 
     private void Awake()
@@ -29,7 +29,7 @@ public class CardView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
         }
     }
 
-    public void Setup(Card card, bool playable)
+    public void Setup(UnoCard card, bool playable)
     {
         cardData = card;
         isPlayable = playable;

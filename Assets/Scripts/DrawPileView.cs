@@ -17,7 +17,7 @@ public class DrawPileView : MonoBehaviour
 
     private IGameLogic gameLogic;
     private Coroutine popupRoutine;
-    private Card pendingCard;
+    private UnoCard pendingCard;
 
     private void Awake()
     {
@@ -80,7 +80,7 @@ public class DrawPileView : MonoBehaviour
         GameEvents.RaiseDrawCardRequested();
     }
 
-    private void HandleCardDrawn(Card card, bool isPlayable)
+    private void HandleCardDrawn(UnoCard card, bool isPlayable)
     {
         if (!isPlayable || popupRoot == null)
         {
