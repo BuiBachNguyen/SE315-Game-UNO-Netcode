@@ -23,6 +23,10 @@ public class GameManager : MonoBehaviour, IGameLogic
     [SerializeField] private int matchPointTarget = 500;
     [SerializeField] private float aiTurnDelaySeconds = 0.6f;
 
+    [Header("Deck Definition (optional)")]
+    [Tooltip("Để trống để dùng bộ bài UNO chuẩn. Assign ScriptableObject Cards để tuỳ chỉnh bộ bài.")]
+    [SerializeField] private List<CardQuantity> deckDefinition;
+
     private readonly List<List<UnoCard>> hands = new List<List<UnoCard>>();
     private readonly List<UnoCard> drawPile = new List<UnoCard>();
     private readonly List<UnoCard> discardPile = new List<UnoCard>();
@@ -34,7 +38,7 @@ public class GameManager : MonoBehaviour, IGameLogic
     private CardColor currentColor = CardColor.Red;
 
     private bool waitingForWildColor;
-    private UnoCardpendingWildCard;
+    private UnoCard pendingWildCard;
     private int pendingWildPlayer = -1;
 
     private Coroutine aiTurnRoutine;
@@ -67,7 +71,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         StartRound();
     }
 
-    public bool IsValidPlay(UnoUnoCard card)
+    public bool IsValidPlay(UnoCard card)
     {
         if (!IsLocalPlayersTurn())
         {
@@ -77,7 +81,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         return IsValidPlayForPlayer(card, localPlayerIndex);
     }
 
-    private bool IsValidPlayForPlayer(UnoUnoCard card, int playerIndex)
+    private bool IsValidPlayForPlayer(UnoCard card, int playerIndex)
     {
         if (card == null || waitingForWildColor)
         {
@@ -169,6 +173,30 @@ public class GameManager : MonoBehaviour, IGameLogic
     private void BuildDeck(List<UnoCard> deck)
     {
         deck.Clear();
+        if (deckDefinition != null && deckDefinition.Count > 0)
+        {
+            BuildDeckFromDefinitions(deck);
+        }
+        else
+        {
+            BuildStandardDeck(deck);
+        }
+    }
+
+    // Xây deck từ ScriptableObject Card assets — designer có thể tạo bộ bài custom trong Inspector.
+    private void BuildDeckFromDefinitions(List<UnoCard> deck)
+    {
+        foreach (CardQuantity entry in deckDefinition)
+        {
+            if (entry.card == null) continue;
+            for (int i = 0; i < entry.quantity; i++)
+                deck.Add(UnoCard.FromDefinition(entry.card));
+        }
+    }
+
+    // Bộ bài UNO chuẩn hard-code — dùng khi không có deckDefinition.
+    private void BuildStandardDeck(List<UnoCard> deck)
+    {
         CardColor[] colors = { CardColor.Red, CardColor.Green, CardColor.Blue, CardColor.Yellow };
 
         for (int c = 0; c < colors.Length; c++)
@@ -491,7 +519,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         aiTurnRoutine = null;
     }
 
-    private UnoCardFindFirstPlayable(List<UnoCard> hand, int playerIndex)
+    private UnoCard FindFirstPlayable(List<UnoCard> hand, int playerIndex)
     {
         for (int i = 0; i < hand.Count; i++)
         {
@@ -620,7 +648,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         currentPlayerIndex = Mod(currentPlayerIndex + (direction * steps), playerCount);
     }
 
-    private UnoCardDrawOneToHand(int playerIndex)
+    private UnoCard DrawOneToHand(int playerIndex)
     {
         UnoCard drawn = DrawOneFromDeck();
         if (drawn == null)
@@ -644,7 +672,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         }
     }
 
-    private UnoCardDrawOneFromDeck()
+    private UnoCard DrawOneFromDeck()
     {
         if (drawPile.Count == 0)
         {
@@ -678,7 +706,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         Shuffle(drawPile);
     }
 
-    private UnoCardGetTopDiscard()
+    private UnoCard GetTopDiscard()
     {
         if (discardPile.Count == 0)
         {
@@ -738,7 +766,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         return best;
     }
 
-    private static UnoCardFindAndRemoveCard(List<UnoCard> hand, Card target)
+    private static UnoCard FindAndRemoveCard(List<UnoCard> hand, UnoCard target)
     {
         for (int i = 0; i < hand.Count; i++)
         {
@@ -763,7 +791,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         return a.Id == b.Id;
     }
 
-    private static UnoCardCreateNumber(CardColor color, int number)
+    private static UnoCard CreateNumber(CardColor color, int number)
     {
         return new UnoCard
         {
@@ -773,7 +801,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         };
     }
 
-    private static UnoCardCreateAction(CardColor color, CardType type)
+    private static UnoCard CreateAction(CardColor color, CardType type)
     {
         return new UnoCard
         {
@@ -783,7 +811,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         };
     }
 
-    private static UnoCardCreateWild(CardType type)
+    private static UnoCard CreateWild(CardType type)
     {
         return new UnoCard
         {
