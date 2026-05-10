@@ -8,7 +8,8 @@ public class TurnManager : MonoBehaviour
     private Timer timer;
     private TurnState currentTurnState;
     private TurnData currentTurnData;
-    private int CurrentDrawAmount=0;
+    private int CurrentDrawAmount = 0;
+    private CardColor CurrentCardColor;
 
     public void Awake()
     {
@@ -48,6 +49,16 @@ public class TurnManager : MonoBehaviour
     public int GetCurrentDrawAmount()
     {
         return CurrentDrawAmount;
+    }
+
+    public CardColor GetCurrentCardColor()
+    {
+        return CurrentCardColor;
+    }
+
+    public void SetCurrentCardColor(CardColor color)
+    {
+        CurrentCardColor = color;
     }
 
     void Start()

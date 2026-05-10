@@ -9,12 +9,12 @@ public class PlayingPhase : TurnState
 
     public override void SetUpTurnState()
     {
-        
+        GameManager.Instance.GetTurnManager().GetTimer().TurnOn();
     }
 
     public override void TurnUpdate()
     {
-        GameManager.Instance.GetTurnManager().GetTimer().TurnOn();
+        
         if(GameManager.Instance.GetTurnManager().GetTimer().IsTimeUp())
         {
             //Auto Draw, if current game draw amount =0 draw 1, else draw same amount as current draw amount,set amount to 0, then go next phase

@@ -9,16 +9,16 @@ public class UnoCheck : TurnState
 
     public override void SetUpTurnState()
     {
-
+        GameManager.Instance.GetTurnManager().GetTimer().TurnOn();
     }
 
     public override void TurnUpdate()
     {
         // Turn On timer. If time is up and player hasn't clicked Uno:
         // Check if someone else clicked Uno (Challenge). If yes, current player draws 2 and GoNextTurn, else GoNextTurn directly.
-        GameManager.Instance.GetTurnManager().GetTimer().TurnOn();
         if (GameManager.Instance.GetTurnManager().GetTimer().IsTimeUp())
-        {
+        { 
+
             GameManager.Instance.GetDeck().DrawCard(2);
             GameManager.Instance.GetTurnManager().SetCurrentDrawAmount(0);
             GameManager.Instance.GetTurnManager().GoNextTurn();

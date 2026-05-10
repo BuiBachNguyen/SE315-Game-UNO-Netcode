@@ -15,7 +15,7 @@ public class CardGameObject : MonoBehaviour
 
     public void SetType(CardType type)
     {
-            this.type = type;
+        this.type = type;
     }
 
     public void SetNumber(int number)
@@ -70,13 +70,61 @@ public class CardGameObject : MonoBehaviour
         };
     }
 
-    public bool IsPlayableOn(CardGameObject topCard)
+    public bool IsPlayableOn(CardGameObject topCard, CardColor currentColor)
     {
-        // A card is playable if it matches the color, type, or number of the top card
-        return false; // Placeholder for actual logic
+        if (this.type == topCard.GetCardType())
+        {
+            if (this.type == CardType.Number && this.number == topCard.GetNumber())
+                return true;
+            if (this.type == CardType.Action)
+            {
+                if (actionTypes.Count != topCard.GetActionTypes().Count)
+                {
+                    return false;
+                }
+                foreach (var action in this.actionTypes)
+                {
+                    if (!topCard.GetActionTypes().Contains(action))
+                        return false;
+                }
+                return true;
+            }
+            return false;
+        }
+        if (this.color == currentColor || currentColor == CardColor.Wild)
+            return true;
+        return false;
+    }
+
+    public void PlayCard()
+    {
+        GameManager.Instance.GetTurnManager().SetCurrentCardColor(this.color);
+        var turndata = GameManager.Instance.GetTurnManager().GetCurrentTurnData();
+        if (this.type == CardType.Action)
+        {
+            foreach (var action in actionTypes)
+            {
+                switch (action)
+                {
+                    case ActionType.Skip:
+                        turndata.IsForbidden = true;
+                        break;
+                    case ActionType.Reverse:
+                        // Handle reverse logic in TurnManager
+                        break;
+                    case ActionType.Draw:
+                        GameManager.Instance.GetTurnManager().SetCurrentDrawAmount(GameManager.Instance.GetTurnManager().GetCurrentDrawAmount() + this.drawAmount);
+                        break;
+                    case ActionType.ChangeColor:
+                        // Handle color change logic, possibly by prompting the player to choose a color
+                        break;
+                }
+            }
+        }
+        turndata.prevCard = this.GetCardData();
+        GameManager.Instance.GetTurnManager().SetCurrentTurnData(turndata);
     }
 }
-
 public struct CardData
 {
     public CardColor color;
