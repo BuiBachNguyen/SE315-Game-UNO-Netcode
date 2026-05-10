@@ -30,26 +30,7 @@ public class CardGameObject : MonoBehaviour
         return false;
     }
 
-    public void PlayCard()
-    {
-        var tm = CardSystemManager.Instance.GetTurnManager();
-        tm.SetCurrentCardColor(this.color);
-        var turnData = tm.GetCurrentTurnData();
-        switch (type)
-        {
-            case CardType.Skip:
-                turnData.IsForbidden = true;
-                break;
-            case CardType.DrawTwo:
-                tm.SetCurrentDrawAmount(tm.GetCurrentDrawAmount() + 2);
-                break;
-            case CardType.WildDrawFour:
-                tm.SetCurrentDrawAmount(tm.GetCurrentDrawAmount() + 4);
-                break;
-        }
-        turnData.prevCard = GetCardData();
-        tm.SetCurrentTurnData(turnData);
-    }
+
 }
 
 public struct CardData
