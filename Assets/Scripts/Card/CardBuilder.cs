@@ -20,6 +20,13 @@ public enum CardType
     WildDrawFour
 }
 
+[System.Serializable]
+public class CardQuantity
+{
+    public Card card;
+    public int quantity;
+}
+
 public static class CardBuilder
 {
     public static GameObject GetABlankCard(Card cardData)
