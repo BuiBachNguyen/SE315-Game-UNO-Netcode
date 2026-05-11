@@ -104,3 +104,4 @@ InitTestScene*.unity*
 
 # VS Code workspace settings (local only)
 .vscode/
+.md
