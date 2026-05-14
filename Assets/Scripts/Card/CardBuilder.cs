@@ -1,4 +1,4 @@
-using NUnit.Framework;
+
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,7 +8,8 @@ public enum CardColor
     Green,
     Blue,
     Yellow,
-    Wild
+    Wild,
+    None
 }
 
 public enum CardType

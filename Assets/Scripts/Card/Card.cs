@@ -9,6 +9,9 @@ public class Card : ScriptableObject
     [SerializeField] private int number;
     [SerializeField] private List<ActionType> actionTypes;
     [SerializeField] private int drawAmount;
+    [SerializeField] private Sprite cardSprite;
+
+    public Sprite GetCardSprite() => cardSprite;
 
     public CardColor GetColor()
     {
