@@ -99,6 +99,9 @@ InitTestScene*.unity*
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
 
+# Markdown files (local docs only)
+*.md
+
 # Claude Code memory (local only, not for version control)
 .claude/
 
