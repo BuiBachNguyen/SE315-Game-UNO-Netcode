@@ -1,0 +1,99 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace CardSystem
+{
+    public class CardGameObject : MonoBehaviour
+    {
+        [SerializeField] private CardColor color;
+        [SerializeField] private CardType type;
+        [SerializeField] private int number;
+        [SerializeField] private List<ActionType> actionTypes;
+        [SerializeField] private int drawAmount;
+
+        public Guid Id { get; } = Guid.NewGuid();
+
+        public void SetColor(CardColor color) { this.color = color; }
+        public void SetType(CardType type) { this.type = type; }
+        public void SetNumber(int number) { this.number = number; }
+        public void SetActionTypes(List<ActionType> actionTypes) { this.actionTypes = actionTypes; }
+        public void SetDrawAmount(int drawAmount) { this.drawAmount = drawAmount; }
+
+        public CardColor GetColor() => color;
+        public CardType GetCardType() => type;
+        public int GetNumber() => number;
+        public List<ActionType> GetActionTypes() => actionTypes;
+        public int GetDrawAmount() => drawAmount;
+
+        public CardData GetCardData()
+        {
+            return new CardData
+            {
+                color = this.color,
+                type = this.type,
+                number = this.number,
+                actionTypes = this.actionTypes,
+                drawAmount = this.drawAmount
+            };
+        }
+
+        public bool IsPlayableOn(CardGameObject topCard, CardColor currentColor)
+        {
+            if (this.color == CardColor.Wild)
+                return true;
+
+            if (this.color == currentColor)
+                return true;
+
+            if (this.type == topCard.GetCardType())
+            {
+                if (this.type == CardType.Number)
+                    return this.number == topCard.GetNumber();
+
+                if (this.type == CardType.Action)
+                {
+                    if (actionTypes == null || topCard.GetActionTypes() == null)
+                        return false;
+                    if (actionTypes.Count != topCard.GetActionTypes().Count)
+                        return false;
+                    foreach (var action in this.actionTypes)
+                    {
+                        if (!topCard.GetActionTypes().Contains(action))
+                            return false;
+                    }
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool IsDrawCard()
+        {
+            return type == CardType.Action
+                && actionTypes != null
+                && actionTypes.Contains(ActionType.Draw);
+        }
+
+        public int GetScoreValue()
+        {
+            if (type == CardType.Number)
+                return Mathf.Max(0, number);
+
+            if (color == CardColor.Wild)
+                return 50;
+
+            return 20;
+        }
+    }
+
+    public struct CardData
+    {
+        public CardColor color;
+        public CardType type;
+        public int number;
+        public List<ActionType> actionTypes;
+        public int drawAmount;
+    }
+}
