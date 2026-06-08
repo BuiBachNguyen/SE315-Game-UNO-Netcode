@@ -101,6 +101,16 @@ public static class GameEvents
     /// </summary>
     public static event Action OnRematchRequested;
 
+    /// <summary>
+    /// Fired when the draw stack total changes — UI shows how many cards must be drawn.
+    /// </summary>
+    public static event Action<int> OnDrawStackChanged;
+
+    /// <summary>
+    /// Fired each timer tick — UI shows remaining time.
+    /// </summary>
+    public static event Action<float> OnTimerTick;
+
     public static void RaiseHandUpdated(List<Card> cards)
     {
         OnHandUpdated?.Invoke(cards);
@@ -194,5 +204,15 @@ public static class GameEvents
     public static void RaiseRematchRequested()
     {
         OnRematchRequested?.Invoke();
+    }
+
+    public static void RaiseDrawStackChanged(int amount)
+    {
+        OnDrawStackChanged?.Invoke(amount);
+    }
+
+    public static void RaiseTimerTick(float timeRemaining)
+    {
+        OnTimerTick?.Invoke(timeRemaining);
     }
 }
