@@ -23,10 +23,18 @@ public class UnityServiceInit : MonoBehaviour
             await UnityServices.InitializeAsync(options);
         }
 
-        if (!AuthenticationService.Instance.IsSignedIn &&
-            !AuthenticationService.Instance.IsSigningIn)
+        if (!AuthenticationService.Instance.IsSignedIn)
         {
-            await AuthenticationService.Instance.SignInAnonymouslyAsync();
+            try
+            {
+                await AuthenticationService.Instance.SignInAnonymouslyAsync();
+            }
+            catch (AuthenticationException ex) when (ex.ErrorCode == AuthenticationErrorCodes.ClientInvalidUserState)
+            {
+                // Already signing in from another Awake call — wait for it to finish
+                while (!AuthenticationService.Instance.IsSignedIn)
+                    await System.Threading.Tasks.Task.Delay(50);
+            }
         }
 
         Debug.Log("Signed in: " + AuthenticationService.Instance.PlayerId);
