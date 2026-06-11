@@ -26,6 +26,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         Instance = this;
         DontDestroyOnLoad(gameObject);
     }
+
     [Header("Players")]
     [SerializeField] private int playerCount = 4;
     [SerializeField] private int localPlayerIndex = 0;
