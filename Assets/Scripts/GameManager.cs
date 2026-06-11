@@ -13,6 +13,19 @@ public class GameManager : MonoBehaviour, IGameLogic
             Index = index;
         }
     }
+    public static GameManager Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+    }
 
     [Header("Players")]
     [SerializeField] private int playerCount = 4;
