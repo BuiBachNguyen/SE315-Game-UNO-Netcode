@@ -27,12 +27,27 @@ public class TurnIndicatorView : MonoBehaviour
             return;
         }
 
+        int displayIndex = GetDisplayIndex(playerIndex);
+
         for (int i = 0; i < playerSlots.Length; i++)
         {
             if (playerSlots[i].highlightBorder != null)
             {
-                playerSlots[i].highlightBorder.SetActive(i == playerIndex);
+                playerSlots[i].highlightBorder.SetActive(i == displayIndex);
             }
         }
+    }
+
+    private int GetDisplayIndex(int playerIndex)
+    {
+        if (PlayerIndexMapper.Instance == null || PlayerIndexMapper.Instance.PlayerCount == 0)
+            return playerIndex;
+
+        int localIndex = PlayerIndexMapper.Instance.GetLocalPlayerIndex();
+        if (localIndex < 0)
+            return playerIndex;
+
+        int count = PlayerIndexMapper.Instance.PlayerCount;
+        return (playerIndex - localIndex + count) % count;
     }
 }

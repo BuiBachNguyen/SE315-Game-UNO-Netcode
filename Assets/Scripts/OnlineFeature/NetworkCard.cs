@@ -24,7 +24,7 @@ public struct NetworkCard : INetworkSerializable, IEquatable<NetworkCard>
             ColorByte = (byte)card.Color,
             TypeByte = (byte)card.Type,
             Number = (sbyte)card.Number,
-            Id = card.Id.GetHashCode()
+            Id = card.NetworkId
         };
     }
 
@@ -36,6 +36,7 @@ public struct NetworkCard : INetworkSerializable, IEquatable<NetworkCard>
     {
         return new Card
         {
+            NetworkId = Id,
             Color = (CardColor)ColorByte,
             Type = (CardType)TypeByte,
             Number = Number

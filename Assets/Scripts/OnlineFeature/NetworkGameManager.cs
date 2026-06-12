@@ -29,6 +29,8 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     private int direction = 1;
     private CardColor currentColor = CardColor.Red;
     private bool waitingForWildColor;
+    private bool roundEnded;
+    private bool matchEnded;
     private Card pendingWildCard;
     private int pendingWildPlayer = -1;
     private int playerCount;
@@ -42,6 +44,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     private NetworkVariable<int> netDirection = new NetworkVariable<int>(1);
     private NetworkVariable<byte> netCurrentColor = new NetworkVariable<byte>();
     private NetworkVariable<int> netDrawPileCount = new NetworkVariable<int>();
+    private NetworkVariable<bool> netWaitingForWildColor = new NetworkVariable<bool>();
 
     // ================================================================
     // LOCAL CLIENT STATE
@@ -72,6 +75,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
         netDirection.OnValueChanged += OnDirectionChanged;
         netCurrentColor.OnValueChanged += OnColorChanged;
         netDrawPileCount.OnValueChanged += OnDrawPileCountChanged;
+        netWaitingForWildColor.OnValueChanged += OnWaitingForWildColorChanged;
     }
 
     public override void OnNetworkDespawn()
@@ -80,6 +84,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
         netDirection.OnValueChanged -= OnDirectionChanged;
         netCurrentColor.OnValueChanged -= OnColorChanged;
         netDrawPileCount.OnValueChanged -= OnDrawPileCountChanged;
+        netWaitingForWildColor.OnValueChanged -= OnWaitingForWildColorChanged;
     }
 
     /// <summary>
@@ -115,14 +120,23 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
         return IsValidPlayCheck(card);
     }
 
+    public void RefreshLocalHand()
+    {
+        if (localHand.Count > 0)
+            GameEvents.RaiseHandUpdated(new List<Card>(localHand));
+    }
+
     /// <summary>
     /// DrawPileView gọi để enable/disable nút bốc bài.
     /// Chạy trên CLIENT — so sánh với NetworkVariable.
     /// </summary>
     public bool IsLocalPlayersTurn()
     {
+        if (localPlayerIndex < 0 && PlayerIndexMapper.Instance != null)
+            localPlayerIndex = PlayerIndexMapper.Instance.GetLocalPlayerIndex();
+
         if (localPlayerIndex < 0) return false;
-        return netCurrentPlayer.Value == localPlayerIndex && !waitingForWildColor;
+        return netCurrentPlayer.Value == localPlayerIndex && !netWaitingForWildColor.Value;
     }
 
     // ================================================================
@@ -270,6 +284,9 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     [ServerRpc(RequireOwnership = false)]
     public void NextRoundServerRpc()
     {
+        if (!roundEnded || matchEnded)
+            return;
+
         StartRound();
     }
 
@@ -279,6 +296,9 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     [ServerRpc(RequireOwnership = false)]
     public void RematchServerRpc()
     {
+        if (!matchEnded)
+            return;
+
         InitializeMatchScores();
         StartRound();
     }
@@ -411,7 +431,22 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     [ClientRpc]
     private void ColorChangedClientRpc(byte colorByte)
     {
-        GameEvents.RaiseColorChanged((CardColor)colorByte);
+        currentColor = (CardColor)colorByte;
+        GameEvents.RaiseColorChanged(currentColor);
+    }
+
+    [ClientRpc]
+    private void SyncPresentationClientRpc(
+        int playerIndex,
+        int playDirection,
+        byte colorByte,
+        int deckCount)
+    {
+        currentColor = (CardColor)colorByte;
+        GameEvents.RaiseTurnChanged(playerIndex);
+        GameEvents.RaiseDirectionChanged(playDirection);
+        GameEvents.RaiseColorChanged(currentColor);
+        GameEvents.RaiseDeckCountChanged(deckCount);
     }
 
     // ================================================================
@@ -437,12 +472,18 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
 
     private void OnColorChanged(byte oldVal, byte newVal)
     {
-        // Đã handle trong ColorChangedClientRpc để tránh duplicate
+        currentColor = (CardColor)newVal;
     }
 
     private void OnDrawPileCountChanged(int oldVal, int newVal)
     {
         GameEvents.RaiseDeckCountChanged(newVal);
+    }
+
+    private void OnWaitingForWildColorChanged(bool oldVal, bool newVal)
+    {
+        if (localHand.Count > 0)
+            GameEvents.RaiseHandUpdated(new List<Card>(localHand));
     }
 
     // ================================================================
@@ -461,6 +502,9 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     private void StartRound()
     {
         waitingForWildColor = false;
+        roundEnded = false;
+        matchEnded = false;
+        netWaitingForWildColor.Value = false;
         pendingWildCard = null;
         pendingWildPlayer = -1;
         unoCalledThisTurn.Clear();
@@ -489,7 +533,14 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
         for (int i = 0; i < playerCount; i++)
         {
             SendHandToClient(i);
+            BroadcastOpponentHandCount(i);
         }
+
+        SyncPresentationClientRpc(
+            currentPlayerIndex,
+            direction,
+            (byte)currentColor,
+            drawPile.Count);
     }
 
     private void ProcessPlayedCard(int playerIndex, Card playedCard)
@@ -524,6 +575,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
         if (playedCard.Type == CardType.Wild || playedCard.Type == CardType.WildDrawFour)
         {
             waitingForWildColor = true;
+            netWaitingForWildColor.Value = true;
             pendingWildCard = playedCard;
             pendingWildPlayer = playerIndex;
 
@@ -541,6 +593,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     private void ApplyWildColorAndAdvance(CardColor selectedColor)
     {
         waitingForWildColor = false;
+        netWaitingForWildColor.Value = false;
         currentColor = selectedColor;
 
         // Thông báo màu mới cho tất cả
@@ -603,6 +656,8 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
 
     private void EndRound(int winnerIndex)
     {
+        roundEnded = true;
+
         int roundScore = 0;
         var playerIndices = new List<int>();
         var scores = new List<int>();
@@ -631,6 +686,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
 
         if (matchScores[winnerIndex] >= matchPointTarget)
         {
+            matchEnded = true;
             MatchEndClientRpc(winnerIndex, matchScores[winnerIndex]);
         }
     }
@@ -830,7 +886,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     {
         foreach (var card in hand)
         {
-            if (card.Id.GetHashCode() == netCard.Id)
+            if (card.NetworkId == netCard.Id)
                 return card;
         }
         return null;

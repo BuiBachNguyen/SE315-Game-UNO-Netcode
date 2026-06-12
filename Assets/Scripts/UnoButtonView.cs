@@ -4,7 +4,6 @@ using UnityEngine.UI;
 
 public class UnoButtonView : MonoBehaviour
 {
-    [SerializeField] private int localPlayerIndex = 0;
     [SerializeField] private Button unoButton;
 
     // Optional: dim button when inactive so player knows when it matters.
@@ -12,6 +11,7 @@ public class UnoButtonView : MonoBehaviour
     [SerializeField] private float inactiveAlpha = 0.4f;
 
     private int localHandCount;
+    private int localPlayerIndex = -1;
     private bool hasCalledUno;
 
     private readonly Dictionary<int, int> opponentHandCounts = new Dictionary<int, int>();
@@ -52,6 +52,8 @@ public class UnoButtonView : MonoBehaviour
 
     private void HandleTurnChanged(int playerIndex)
     {
+        ResolveLocalPlayerIndex();
+
         if (playerIndex == localPlayerIndex)
         {
             hasCalledUno = false;
@@ -79,6 +81,12 @@ public class UnoButtonView : MonoBehaviour
     private bool CanCallUno()
     {
         return localHandCount == 1 && !hasCalledUno;
+    }
+
+    private void ResolveLocalPlayerIndex()
+    {
+        if (localPlayerIndex < 0 && PlayerIndexMapper.Instance != null)
+            localPlayerIndex = PlayerIndexMapper.Instance.GetLocalPlayerIndex();
     }
 
     private int FindCatchTarget()
