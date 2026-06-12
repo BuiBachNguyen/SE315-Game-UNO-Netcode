@@ -1487,6 +1487,7 @@ GameObject:
   - component: {fileID: 2088666563}
   - component: {fileID: 2088666562}
   - component: {fileID: 2088666566}
+  - component: {fileID: 2088666567}
   m_Layer: 5
   m_Name: Main Canvas
   m_TagString: Untagged
@@ -1591,6 +1592,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LobbyUI
   roomContainer: {fileID: 662376480}
   roomItemPrefab: {fileID: 4874476921601610022, guid: 4b404fb7008997a44be67e2ad5a5156f, type: 3}
+--- !u!114 &2088666567
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2088666561}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a2b1c9e8d7f46a1b3c5d6e7f8091a2b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::MultiplayerAutoJoinTest
+  lobbyUI: {fileID: 2088666566}
+  clientRetryDelaySeconds: 1
+  maxJoinAttempts: 30
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

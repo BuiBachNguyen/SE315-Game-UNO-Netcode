@@ -52,6 +52,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     // Mỗi client tự giữ bài của mình (nhận từ server qua ClientRpc)
     private readonly List<Card> localHand = new List<Card>();
     private int localPlayerIndex = -1;
+    private Card localTopDiscard;
 
     private void Awake()
     {
@@ -147,7 +148,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     {
         if (card == null || waitingForWildColor) return false;
 
-        Card top = GetTopDiscard();
+        Card top = IsServer ? GetTopDiscard() : localTopDiscard;
         if (top == null) return true;
 
         // Wild luôn đánh được
@@ -337,6 +338,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     private void CardPlayedClientRpc(int playerIndex, NetworkCard netCard)
     {
         Card card = netCard.ToCard();
+        localTopDiscard = card;
 
         // Cập nhật discard pile trên UI
         GameEvents.RaiseDiscardChanged(card);
@@ -344,8 +346,11 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
         // Nếu không phải Wild → cập nhật màu ngay
         if (card.Type != CardType.Wild && card.Type != CardType.WildDrawFour)
         {
-            GameEvents.RaiseColorChanged(card.Color);
+            currentColor = card.Color;
+            GameEvents.RaiseColorChanged(currentColor);
         }
+
+        RefreshLocalHand();
     }
 
     /// <summary>
@@ -433,6 +438,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     {
         currentColor = (CardColor)colorByte;
         GameEvents.RaiseColorChanged(currentColor);
+        RefreshLocalHand();
     }
 
     [ClientRpc]
@@ -473,6 +479,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     private void OnColorChanged(byte oldVal, byte newVal)
     {
         currentColor = (CardColor)newVal;
+        RefreshLocalHand();
     }
 
     private void OnDrawPileCountChanged(int oldVal, int newVal)

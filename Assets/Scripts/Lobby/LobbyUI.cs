@@ -4,6 +4,7 @@ using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class LobbyUI : MonoBehaviour
@@ -13,6 +14,11 @@ public class LobbyUI : MonoBehaviour
     public GameObject roomItemPrefab;
 
     public async void CreateRoom()
+    {
+        await CreateRoomAsync();
+    }
+
+    public async Task CreateRoomAsync(string roomName = "Room ABC")
     {
         // 1️⃣ tạo relay trước
         Allocation allocation =
@@ -55,7 +61,7 @@ public class LobbyUI : MonoBehaviour
         Lobby lobby =
             await LobbyService.Instance
                 .CreateLobbyAsync(
-                    "Room ABC",
+                    roomName,
                     6,
                     options);
 
@@ -75,6 +81,11 @@ public class LobbyUI : MonoBehaviour
     }
 
     public async void JoinRelay(string joinCode)
+    {
+        await JoinRelayAsync(joinCode);
+    }
+
+    public async Task JoinRelayAsync(string joinCode)
     {
         var joinAllocation =
             await RelayService.Instance
@@ -132,6 +143,11 @@ public class LobbyUI : MonoBehaviour
 
     public async void JoinLobbyById(string lobbyId)
     {
+        await JoinLobbyByIdAsync(lobbyId);
+    }
+
+    public async Task JoinLobbyByIdAsync(string lobbyId)
+    {
         Lobby lobby =
             await LobbyService.Instance
                 .JoinLobbyByIdAsync(lobbyId);
@@ -139,7 +155,7 @@ public class LobbyUI : MonoBehaviour
         string joinCode =
             lobby.Data["joinCode"].Value;
 
-        JoinRelay(joinCode);
+        await JoinRelayAsync(joinCode);
     }
 
     public async void JoinLobbyRandomly()
