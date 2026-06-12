@@ -26,14 +26,11 @@ public class SoundManager : MonoBehaviour
     void Awake()
     {
         var soundManagers = FindObjectsByType<SoundManager>(FindObjectsSortMode.None);
-        if (soundManagers.Length > 1)
+        for(int i=1; i < soundManagers.Length; i++)
         {
-            Destroy(this);
+            Destroy(soundManagers[i].gameObject);
         }
-        else
-        {
-            DontDestroyOnLoad(this);
-        }
+        DontDestroyOnLoad(soundManagers[0].gameObject);
     }
     #endregion
 
