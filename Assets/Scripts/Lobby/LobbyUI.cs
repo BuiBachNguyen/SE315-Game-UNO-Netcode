@@ -59,6 +59,8 @@ public class LobbyUI : MonoBehaviour
                     6,
                     options);
 
+        UnityServiceInit.StartLobbyHeartbeat(lobby.Id);
+
         Debug.Log("Lobby code: " +
             lobby.LobbyCode);
 
@@ -154,6 +156,12 @@ public class LobbyUI : MonoBehaviour
                 crowedestLobby = lobby;
             else if(crowedestLobby.Players.Count < lobby.Players.Count)
                 crowedestLobby = lobby;
+        }
+
+        if (crowedestLobby == null)
+        {
+            Debug.LogWarning("No public lobby is currently available.");
+            return;
         }
 
         JoinLobbyById(crowedestLobby.Id);
