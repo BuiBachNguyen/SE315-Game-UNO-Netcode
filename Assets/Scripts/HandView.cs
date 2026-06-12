@@ -29,6 +29,9 @@ public class HandView : MonoBehaviour
     private void OnEnable()
     {
         GameEvents.OnHandUpdated += HandleHandUpdated;
+
+        if (gameLogicBehaviour is NetworkGameManager networkGameManager)
+            networkGameManager.RefreshLocalHand();
     }
 
     private void OnDisable()

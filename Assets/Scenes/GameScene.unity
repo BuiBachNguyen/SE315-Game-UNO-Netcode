@@ -382,7 +382,7 @@ MonoBehaviour:
   handContainer: {fileID: 46667798}
   poolContainer: {fileID: 1539251038}
   cardViewPrefab: {fileID: 3858500440694207507, guid: 34c8d1a5f69b5cd45bd4e00c75f79554, type: 3}
-  gameLogicBehaviour: {fileID: 1940310554}
+  gameLogicBehaviour: {fileID: 706026992}
 --- !u!114 &46667804
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2469,7 +2469,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DrawPileView
   drawButton: {fileID: 547788642}
-  gameLogicBehaviour: {fileID: 1940310554}
+  gameLogicBehaviour: {fileID: 706026992}
   popupRoot: {fileID: 822668107}
   popupText: {fileID: 1519727818}
   yesButton: {fileID: 56106745}
@@ -3322,7 +3322,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e25d2868086e3814f95cd6e462fde0ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnoButtonView
-  localPlayerIndex: 0
   unoButton: {fileID: 1615115281}
   canvasGroup: {fileID: 1615115285}
   inactiveAlpha: 0.4

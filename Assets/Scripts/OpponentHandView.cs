@@ -8,6 +8,7 @@ public class OpponentHandView : MonoBehaviour
     [SerializeField] private Transform cardContainer;
     [SerializeField] private Image cardBackPrefab;
     [SerializeField] private GameObject highlightBorder;
+    [Tooltip("Seat offset from the local player: 1, 2, or 3.")]
     [SerializeField] private int opponentPlayerIndex;
 
     private readonly List<Image> activeCards = new List<Image>();
@@ -27,8 +28,7 @@ public class OpponentHandView : MonoBehaviour
 
     private void HandleOpponentHandCountChanged(int playerIndex, int cardCount)
     {
-        // Each instance tracks a specific opponent to avoid mixing UI across players.
-        if (playerIndex != opponentPlayerIndex)
+        if (playerIndex != GetTrackedPlayerIndex())
         {
             return;
         }
@@ -40,8 +40,20 @@ public class OpponentHandView : MonoBehaviour
     {
         if (highlightBorder != null)
         {
-            highlightBorder.SetActive(playerIndex == opponentPlayerIndex);
+            highlightBorder.SetActive(playerIndex == GetTrackedPlayerIndex());
         }
+    }
+
+    private int GetTrackedPlayerIndex()
+    {
+        if (PlayerIndexMapper.Instance == null || PlayerIndexMapper.Instance.PlayerCount == 0)
+            return opponentPlayerIndex;
+
+        int localIndex = PlayerIndexMapper.Instance.GetLocalPlayerIndex();
+        if (localIndex < 0)
+            return opponentPlayerIndex;
+
+        return (localIndex + opponentPlayerIndex) % PlayerIndexMapper.Instance.PlayerCount;
     }
 
     private void UpdateCardBacks(int cardCount)
