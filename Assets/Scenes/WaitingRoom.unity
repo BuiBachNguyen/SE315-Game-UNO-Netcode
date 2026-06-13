@@ -413,7 +413,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaitingRoomChecker
   ShowTopMostFoldoutHeaderGroup: 1
-  requiredPlayers: 4
+  requiredPlayers: 2
 --- !u!4 &1490246232
 Transform:
   m_ObjectHideFlags: 0
