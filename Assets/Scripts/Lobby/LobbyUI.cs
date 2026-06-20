@@ -1,4 +1,4 @@
-﻿using Unity.Services.Relay;
+using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
@@ -13,13 +13,46 @@ public class LobbyUI : MonoBehaviour
     public Transform roomContainer;
     public GameObject roomItemPrefab;
 
+    private float searchDelay = 1f;
+    private float searchTimer = 0f;
+    private string currentSearchQuery = "";
+    private bool isSearching = false;
+
+    private void Update()
+    {
+        if (isSearching)
+        {
+            searchTimer -= Time.deltaTime;
+            if (searchTimer <= 0f)
+            {
+                isSearching = false;
+                SearchRoom(currentSearchQuery);
+            }
+        }
+    }
+
+    public void OnSearchInputValueChanged(string newText)
+    {
+        currentSearchQuery = newText;
+        searchTimer = searchDelay;
+        isSearching = true;
+    }
+
     public async void CreateRoom()
     {
         await CreateRoomAsync();
     }
 
-    public async Task CreateRoomAsync(string roomName = "Room ABC")
+    public async Task CreateRoomAsync()
     {
+        string randomId = UnityEngine.Random.Range(100000, 999999).ToString();
+        string hostName = "Player";
+        if (PlayerData.Instance != null && !string.IsNullOrEmpty(PlayerData.Instance.PlayerName))
+        {
+            hostName = PlayerData.Instance.PlayerName;
+        }
+        string roomName = $"RoomID: {randomId} - Host: {hostName}";
+
         // 1️⃣ tạo relay trước
         Allocation allocation =
             await RelayService.Instance
@@ -183,4 +216,46 @@ public class LobbyUI : MonoBehaviour
         JoinLobbyById(crowedestLobby.Id);
 
     }    
+
+    public async void SearchRoom(string searchQuery)
+    {
+        if (string.IsNullOrEmpty(searchQuery))
+        {
+            RefreshRoomList();
+            return;
+        }
+
+        foreach (Transform child in roomContainer)
+            Destroy(child.gameObject);
+
+        try
+        {
+            QueryLobbiesOptions options = new QueryLobbiesOptions();
+            options.Filters = new System.Collections.Generic.List<QueryFilter>
+            {
+                new QueryFilter(
+                    field: QueryFilter.FieldOptions.Name,
+                    op: QueryFilter.OpOptions.CONTAINS,
+                    value: searchQuery)
+            };
+
+            QueryResponse response = await LobbyService.Instance.QueryLobbiesAsync(options);
+
+            foreach (Lobby lobby in response.Results)
+            {
+                GameObject obj = Instantiate(roomItemPrefab, roomContainer);
+                RoomItemUI item = obj.GetComponent<RoomItemUI>();
+                item.Setup(
+                    lobby.Name,
+                    lobby.Players.Count,
+                    lobby.MaxPlayers,
+                    lobby.Id,
+                    this);
+            }
+        }
+        catch (LobbyServiceException e)
+        {
+            Debug.LogError(e);
+        }
+    }
 }
