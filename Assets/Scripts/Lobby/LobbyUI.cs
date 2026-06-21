@@ -9,6 +9,8 @@ using UnityEngine;
 
 public class LobbyUI : MonoBehaviour
 {
+    const int MaxPlayers = 4;
+
     string currentJoinCode;
     public Transform roomContainer;
     public GameObject roomItemPrefab;
@@ -56,7 +58,7 @@ public class LobbyUI : MonoBehaviour
         // 1️⃣ tạo relay trước
         Allocation allocation =
             await RelayService.Instance
-                .CreateAllocationAsync(6);
+                .CreateAllocationAsync(MaxPlayers - 1);
 
         currentJoinCode =
             await RelayService.Instance
@@ -95,7 +97,7 @@ public class LobbyUI : MonoBehaviour
             await LobbyService.Instance
                 .CreateLobbyAsync(
                     roomName,
-                    6,
+                    MaxPlayers,
                     options);
 
         UnityServiceInit.StartLobbyHeartbeat(lobby.Id);
@@ -137,12 +139,6 @@ public class LobbyUI : MonoBehaviour
             joinAllocation.HostConnectionData);
 
         NetworkManager.Singleton.StartClient();
-
-        NetworkManager.Singleton.SceneManager
-            .LoadScene(
-            "WaitingRoom",
-            UnityEngine.SceneManagement
-            .LoadSceneMode.Single);
     }
 
 
