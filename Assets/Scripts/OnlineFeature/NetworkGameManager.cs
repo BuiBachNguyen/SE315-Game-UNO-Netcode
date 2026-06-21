@@ -59,6 +59,14 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
         Instance = this;
     }
 
+    public override void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
+
+        base.OnDestroy();
+    }
+
     // ================================================================
     // LIFECYCLE — Khi NetworkObject được spawn
     // ================================================================

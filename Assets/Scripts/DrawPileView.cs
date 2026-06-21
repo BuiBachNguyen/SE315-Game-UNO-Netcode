@@ -52,6 +52,7 @@ public class DrawPileView : MonoBehaviour
     {
         GameEvents.OnTurnChanged += HandleTurnChanged;
         GameEvents.OnCardDrawn += HandleCardDrawn;
+        UpdateInteractable();
     }
 
     private void OnDisable()
