@@ -20,6 +20,19 @@ public class LobbyUI : MonoBehaviour
     private string currentSearchQuery = "";
     private bool isSearching = false;
 
+    private async void Start()
+    {
+        try
+        {
+            await UnityServiceInit.EnsureInitializedAsync();
+            await RefreshRoomListAsync();
+        }
+        catch (System.Exception exception)
+        {
+            Debug.LogException(exception);
+        }
+    }
+
     private void Update()
     {
         if (isSearching)
@@ -144,6 +157,18 @@ public class LobbyUI : MonoBehaviour
 
 
     public async void RefreshRoomList()
+    {
+        try
+        {
+            await RefreshRoomListAsync();
+        }
+        catch (System.Exception exception)
+        {
+            Debug.LogException(exception);
+        }
+    }
+
+    private async Task RefreshRoomListAsync()
     {
         foreach (Transform child in roomContainer)
             Destroy(child.gameObject);

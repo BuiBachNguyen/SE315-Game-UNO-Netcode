@@ -73,6 +73,6 @@ MonoBehaviour:
     skip: {fileID: -2370671090048425802, guid: 6eab25453a6299f48b111d75d828f8c5, type: 3}
     reverse: {fileID: -2342172750036266882, guid: b60cc9515ed798f49a44acfd8e02242e, type: 3}
     drawTwo: {fileID: -8645177340769643559, guid: 1774a728a574bd74d8d56928ed2f8474, type: 3}
-  wild: {fileID: 3773449606348301056, guid: ab3a318b63f405844b1093f523004cd3, type: 3}
-  wildDrawFour: {fileID: 2231887219363489790, guid: 5054285b2b145d44d8f27734f295f4d3, type: 3}
-  cardBack: {fileID: -1558256198040742725, guid: f1c22f589a1b9fd409869585bff5f819, type: 3}
+  wild: {fileID: 2903490839760470981, guid: 929963953366a3640adaae1cd9726242, type: 3}
+  wildDrawFour: {fileID: -6389965723024962564, guid: c80350315c427c84983ca2dfceda8100, type: 3}
+  cardBack: {fileID: 8721704259690680069, guid: 46777c479e5b1874ba7757d135258732, type: 3}
