@@ -7,23 +7,24 @@ public class OpponentHandView : MonoBehaviour
     [SerializeField] private CardSpriteMap cardSpriteMap;
     [SerializeField] private Transform cardContainer;
     [SerializeField] private Image cardBackPrefab;
-    [SerializeField] private GameObject highlightBorder;
     [Tooltip("Seat offset from the local player: 1, 2, or 3.")]
     [SerializeField] private int opponentPlayerIndex;
 
+    private AdaptiveCardHandLayout handLayout;
     private readonly List<Image> activeCards = new List<Image>();
     private readonly Stack<Image> pooledCards = new Stack<Image>();
 
     private void OnEnable()
     {
+        if (cardContainer != null)
+            handLayout = cardContainer.GetComponent<AdaptiveCardHandLayout>();
+
         GameEvents.OnOpponentHandCountChanged += HandleOpponentHandCountChanged;
-        GameEvents.OnTurnChanged += HandleTurnChanged;
     }
 
     private void OnDisable()
     {
         GameEvents.OnOpponentHandCountChanged -= HandleOpponentHandCountChanged;
-        GameEvents.OnTurnChanged -= HandleTurnChanged;
     }
 
     private void HandleOpponentHandCountChanged(int playerIndex, int cardCount)
@@ -34,14 +35,6 @@ public class OpponentHandView : MonoBehaviour
         }
 
         UpdateCardBacks(cardCount);
-    }
-
-    private void HandleTurnChanged(int playerIndex)
-    {
-        if (highlightBorder != null)
-        {
-            highlightBorder.SetActive(playerIndex == GetTrackedPlayerIndex());
-        }
     }
 
     private int GetTrackedPlayerIndex()
@@ -74,9 +67,12 @@ public class OpponentHandView : MonoBehaviour
         {
             Image view = GetFromPool();
             view.transform.SetParent(cardContainer, false);
+            view.transform.SetSiblingIndex(i);
             view.sprite = backSprite;
             activeCards.Add(view);
         }
+
+        handLayout?.RefreshLayout();
     }
 
     private Image GetFromPool()

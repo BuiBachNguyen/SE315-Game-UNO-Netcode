@@ -9,6 +9,7 @@ public class HandView : MonoBehaviour
     [SerializeField] private MonoBehaviour gameLogicBehaviour;
 
     private IGameLogic gameLogic;
+    private AdaptiveCardHandLayout handLayout;
     private readonly List<CardView> activeViews = new List<CardView>();
     private readonly Stack<CardView> pooledViews = new Stack<CardView>();
 
@@ -24,6 +25,9 @@ public class HandView : MonoBehaviour
         {
             poolContainer = handContainer;
         }
+
+        if (handContainer != null)
+            handLayout = handContainer.GetComponent<AdaptiveCardHandLayout>();
     }
 
     private void OnEnable()
@@ -60,9 +64,12 @@ public class HandView : MonoBehaviour
             bool playable = gameLogic != null && gameLogic.IsValidPlay(card);
 
             view.transform.SetParent(handContainer, false);
+            view.transform.SetSiblingIndex(i);
             view.Setup(card, playable);
             activeViews.Add(view);
         }
+
+        handLayout?.RefreshLayout();
     }
 
     private CardView GetFromPool()

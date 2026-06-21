@@ -136,7 +136,7 @@ public class TurnIndicatorView : MonoBehaviour
             if (slot.root == null)
                 continue;
 
-            Transform turnView = slot.root.Find("TurnView");
+            Transform turnView = FindTurnView(slot.root);
             if (turnView == null)
                 continue;
 
@@ -161,6 +161,22 @@ public class TurnIndicatorView : MonoBehaviour
                     slot.playerNameText = nameText.GetComponent<TMP_Text>();
             }
         }
+    }
+
+    private static Transform FindTurnView(Transform slotRoot)
+    {
+        Transform exactMatch = slotRoot.Find("TurnView");
+        if (exactMatch != null)
+            return exactMatch;
+
+        for (int i = 0; i < slotRoot.childCount; i++)
+        {
+            Transform child = slotRoot.GetChild(i);
+            if (child.name.StartsWith("TurnView"))
+                return child;
+        }
+
+        return null;
     }
 
     private int GetDisplayIndex(int playerIndex)
