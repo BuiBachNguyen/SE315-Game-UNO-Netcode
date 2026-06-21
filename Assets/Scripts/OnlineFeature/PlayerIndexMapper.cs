@@ -1,111 +1,141 @@
-using Unity.Netcode;
-using Unity.Collections;
+using System;
 using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Netcode;
 using UnityEngine;
 
-/// <summary>
-/// Map clientId (ulong) ↔ playerIndex (0-3).
-/// Server gán index theo thứ tự join, sync tới tất cả clients.
-/// </summary>
 public class PlayerIndexMapper : NetworkBehaviour
 {
     public static PlayerIndexMapper Instance { get; private set; }
 
-    // ======== SYNC DATA ========
-    // NetworkList tự đồng bộ tới tất cả clients
-    // Mỗi phần tử chứa 1 clientId, index trong list = playerIndex
-    private NetworkList<ulong> playerClientIds;
+    public event Action PlayerNamesChanged;
 
-    // ======== LOCAL CACHE ========
-    // Để tra cứu nhanh trên mỗi client
+    private NetworkList<ulong> playerClientIds;
+    private NetworkList<FixedString64Bytes> playerNames;
+
     private readonly Dictionary<ulong, int> clientToIndex = new Dictionary<ulong, int>();
     private readonly Dictionary<int, ulong> indexToClient = new Dictionary<int, ulong>();
+    private readonly Dictionary<ulong, FixedString64Bytes> pendingPlayerNames =
+        new Dictionary<ulong, FixedString64Bytes>();
 
     private void Awake()
     {
         Instance = this;
         playerClientIds = new NetworkList<ulong>();
+        playerNames = new NetworkList<FixedString64Bytes>();
     }
 
     public override void OnNetworkSpawn()
     {
-        // Lắng nghe khi list thay đổi (server thêm player mới)
         playerClientIds.OnListChanged += OnPlayerListChanged;
+        playerNames.OnListChanged += OnPlayerNameListChanged;
 
-        // Nếu list đã có data (client join muộn), rebuild cache
         RebuildLocalCache();
+
+        if (IsClient)
+        {
+            string localName = PlayerData.Instance != null
+                ? PlayerData.Instance.PlayerName
+                : string.Empty;
+
+            SubmitPlayerNameServerRpc(localName);
+        }
     }
 
     public override void OnNetworkDespawn()
     {
         playerClientIds.OnListChanged -= OnPlayerListChanged;
+        playerNames.OnListChanged -= OnPlayerNameListChanged;
     }
 
-    // ======== SERVER: GÁN PLAYER INDEX ========
+    public override void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
 
-    /// <summary>
-    /// Server gọi khi tất cả player đã join lobby.
-    /// Gán playerIndex 0, 1, 2, 3 theo thứ tự trong danh sách connected clients.
-    /// </summary>
+        base.OnDestroy();
+    }
+
     public void AssignAllPlayers()
     {
-        if (!IsServer) return;
+        if (!IsServer)
+            return;
 
         playerClientIds.Clear();
+        playerNames.Clear();
 
         foreach (var client in NetworkManager.Singleton.ConnectedClientsList)
         {
             playerClientIds.Add(client.ClientId);
-            Debug.Log($"[PlayerIndexMapper] Assigned clientId {client.ClientId} → playerIndex {playerClientIds.Count - 1}");
+
+            if (pendingPlayerNames.TryGetValue(client.ClientId, out FixedString64Bytes playerName))
+                playerNames.Add(playerName);
+            else
+                playerNames.Add(CreateFallbackName(playerNames.Count));
+
+            Debug.Log(
+                $"[PlayerIndexMapper] Assigned clientId {client.ClientId} " +
+                $"to playerIndex {playerClientIds.Count - 1}");
         }
+
+        PlayerNamesChanged?.Invoke();
     }
 
-    // ======== QUERY METHODS (dùng trên mọi client) ========
+    [ServerRpc(RequireOwnership = false)]
+    private void SubmitPlayerNameServerRpc(
+        string submittedName,
+        ServerRpcParams rpcParams = default)
+    {
+        ulong clientId = rpcParams.Receive.SenderClientId;
+        FixedString64Bytes playerName = SanitizePlayerName(submittedName, clientId);
 
-    /// <summary>
-    /// Trả về playerIndex (0-3) của client hiện tại.
-    /// VD: Client này là player 2.
-    /// </summary>
+        pendingPlayerNames[clientId] = playerName;
+
+        int playerIndex = GetPlayerIndex(clientId);
+        if (playerIndex >= 0 && playerIndex < playerNames.Count)
+            playerNames[playerIndex] = playerName;
+    }
+
     public int GetLocalPlayerIndex()
     {
-        ulong localId = NetworkManager.Singleton.LocalClientId;
-        if (clientToIndex.TryGetValue(localId, out int index))
-            return index;
+        if (NetworkManager.Singleton == null)
+            return -1;
 
-        Debug.LogWarning($"[PlayerIndexMapper] LocalClientId {localId} chưa được map!");
-        return -1;
+        ulong localId = NetworkManager.Singleton.LocalClientId;
+        return clientToIndex.TryGetValue(localId, out int index) ? index : -1;
     }
 
-    /// <summary>
-    /// Từ clientId → playerIndex.
-    /// </summary>
     public int GetPlayerIndex(ulong clientId)
     {
-        if (clientToIndex.TryGetValue(clientId, out int index))
-            return index;
-        return -1;
+        return clientToIndex.TryGetValue(clientId, out int index) ? index : -1;
     }
 
-    /// <summary>
-    /// Từ playerIndex → clientId.
-    /// </summary>
     public ulong GetClientId(int playerIndex)
     {
-        if (indexToClient.TryGetValue(playerIndex, out ulong clientId))
-            return clientId;
-        return ulong.MaxValue;
+        return indexToClient.TryGetValue(playerIndex, out ulong clientId)
+            ? clientId
+            : ulong.MaxValue;
     }
 
-    /// <summary>
-    /// Tổng số player đã được map.
-    /// </summary>
-    public int PlayerCount => playerClientIds.Count;
+    public string GetPlayerName(int playerIndex)
+    {
+        if (playerIndex >= 0 && playerIndex < playerNames.Count)
+            return playerNames[playerIndex].ToString();
 
-    // ======== INTERNAL ========
+        return $"Player {playerIndex + 1}";
+    }
+
+    public int PlayerCount => playerClientIds.Count;
 
     private void OnPlayerListChanged(NetworkListEvent<ulong> changeEvent)
     {
         RebuildLocalCache();
+        PlayerNamesChanged?.Invoke();
+    }
+
+    private void OnPlayerNameListChanged(NetworkListEvent<FixedString64Bytes> changeEvent)
+    {
+        PlayerNamesChanged?.Invoke();
     }
 
     private void RebuildLocalCache()
@@ -115,9 +145,26 @@ public class PlayerIndexMapper : NetworkBehaviour
 
         for (int i = 0; i < playerClientIds.Count; i++)
         {
-            ulong cid = playerClientIds[i];
-            clientToIndex[cid] = i;
-            indexToClient[i] = cid;
+            ulong clientId = playerClientIds[i];
+            clientToIndex[clientId] = i;
+            indexToClient[i] = clientId;
         }
+    }
+
+    private static FixedString64Bytes SanitizePlayerName(string submittedName, ulong clientId)
+    {
+        string playerName = string.IsNullOrWhiteSpace(submittedName)
+            ? $"Player {clientId + 1}"
+            : submittedName.Trim();
+
+        if (playerName.Length > 20)
+            playerName = playerName.Substring(0, 20);
+
+        return new FixedString64Bytes(playerName);
+    }
+
+    private static FixedString64Bytes CreateFallbackName(int playerIndex)
+    {
+        return new FixedString64Bytes($"Player {playerIndex + 1}");
     }
 }

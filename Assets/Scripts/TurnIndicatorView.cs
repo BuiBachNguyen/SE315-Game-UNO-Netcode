@@ -1,39 +1,164 @@
+using System.Collections;
+using TMPro;
 using UnityEngine;
 
 public class TurnIndicatorView : MonoBehaviour
 {
     [System.Serializable]
-    public struct PlayerSlot
+    public class PlayerSlot
     {
-        public GameObject highlightBorder;
+        public Transform root;
+        public GameObject inactivePlate;
+        public GameObject activePlate;
+        public TMP_Text playerNameText;
     }
 
     [SerializeField] private PlayerSlot[] playerSlots;
 
+    private static readonly string[] SlotObjectNames =
+    {
+        "PlayerSlot_Local",
+        "PlayerSlot_Left",
+        "PlayerSlot_Top",
+        "PlayerSlot_Right"
+    };
+
+    private PlayerIndexMapper boundMapper;
+    private Coroutine bindMapperRoutine;
+
+    private void Awake()
+    {
+        ResolvePlayerSlots();
+        SetActiveDisplayIndex(-1);
+        RefreshPlayerNames();
+    }
+
     private void OnEnable()
     {
         GameEvents.OnTurnChanged += HandleTurnChanged;
+        bindMapperRoutine = StartCoroutine(BindPlayerMapper());
     }
 
     private void OnDisable()
     {
         GameEvents.OnTurnChanged -= HandleTurnChanged;
+
+        if (bindMapperRoutine != null)
+        {
+            StopCoroutine(bindMapperRoutine);
+            bindMapperRoutine = null;
+        }
+
+        if (boundMapper != null)
+        {
+            boundMapper.PlayerNamesChanged -= RefreshPlayerNames;
+            boundMapper = null;
+        }
     }
 
     private void HandleTurnChanged(int playerIndex)
     {
-        if (playerSlots == null)
-        {
-            return;
-        }
+        SetActiveDisplayIndex(GetDisplayIndex(playerIndex));
+    }
 
-        int displayIndex = GetDisplayIndex(playerIndex);
+    private void SetActiveDisplayIndex(int displayIndex)
+    {
+        if (playerSlots == null)
+            return;
 
         for (int i = 0; i < playerSlots.Length; i++)
         {
-            if (playerSlots[i].highlightBorder != null)
+            PlayerSlot slot = playerSlots[i];
+            if (slot == null)
+                continue;
+
+            bool isActive = i == displayIndex;
+
+            if (slot.inactivePlate != null)
+                slot.inactivePlate.SetActive(!isActive);
+
+            if (slot.activePlate != null)
+                slot.activePlate.SetActive(isActive);
+        }
+    }
+
+    private IEnumerator BindPlayerMapper()
+    {
+        while (PlayerIndexMapper.Instance == null)
+            yield return null;
+
+        boundMapper = PlayerIndexMapper.Instance;
+        boundMapper.PlayerNamesChanged += RefreshPlayerNames;
+        RefreshPlayerNames();
+        bindMapperRoutine = null;
+    }
+
+    private void RefreshPlayerNames()
+    {
+        if (playerSlots == null)
+            return;
+
+        for (int playerIndex = 0; playerIndex < playerSlots.Length; playerIndex++)
+        {
+            int displayIndex = GetDisplayIndex(playerIndex);
+            if (displayIndex < 0 || displayIndex >= playerSlots.Length)
+                continue;
+
+            PlayerSlot slot = playerSlots[displayIndex];
+            if (slot == null || slot.playerNameText == null)
+                continue;
+
+            slot.playerNameText.text = PlayerIndexMapper.Instance != null
+                ? PlayerIndexMapper.Instance.GetPlayerName(playerIndex)
+                : $"Player {playerIndex + 1}";
+        }
+    }
+
+    private void ResolvePlayerSlots()
+    {
+        if (playerSlots == null || playerSlots.Length != SlotObjectNames.Length)
+            playerSlots = new PlayerSlot[SlotObjectNames.Length];
+
+        for (int i = 0; i < SlotObjectNames.Length; i++)
+        {
+            if (playerSlots[i] == null)
+                playerSlots[i] = new PlayerSlot();
+
+            PlayerSlot slot = playerSlots[i];
+
+            if (slot.root == null)
             {
-                playerSlots[i].highlightBorder.SetActive(i == displayIndex);
+                GameObject rootObject = GameObject.Find(SlotObjectNames[i]);
+                if (rootObject != null)
+                    slot.root = rootObject.transform;
+            }
+
+            if (slot.root == null)
+                continue;
+
+            Transform turnView = slot.root.Find("TurnView");
+            if (turnView == null)
+                continue;
+
+            if (slot.inactivePlate == null)
+            {
+                Transform inactivePlate = turnView.Find("InActivePlate");
+                if (inactivePlate != null)
+                    slot.inactivePlate = inactivePlate.gameObject;
+            }
+
+            if (slot.activePlate == null)
+            {
+                Transform activePlate = turnView.Find("ActivePlate");
+                if (activePlate != null)
+                    slot.activePlate = activePlate.gameObject;
+            }
+
+            if (slot.playerNameText == null)
+            {
+                Transform nameText = turnView.Find("PlayerNameText");
+                if (nameText != null)
+                    slot.playerNameText = nameText.GetComponent<TMP_Text>();
             }
         }
     }
@@ -47,7 +172,7 @@ public class TurnIndicatorView : MonoBehaviour
         if (localIndex < 0)
             return playerIndex;
 
-        int count = PlayerIndexMapper.Instance.PlayerCount;
-        return (playerIndex - localIndex + count) % count;
+        int playerCount = PlayerIndexMapper.Instance.PlayerCount;
+        return (playerIndex - localIndex + playerCount) % playerCount;
     }
 }
