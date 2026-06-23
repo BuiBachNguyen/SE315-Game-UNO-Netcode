@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Server-authoritative game manager cho mode online.
@@ -34,6 +35,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     private Card pendingWildCard;
     private int pendingWildPlayer = -1;
     private int playerCount;
+    private bool gameStarted;
 
     // ================================================================
     // NETWORK VARIABLES (tự sync tới tất cả clients)
@@ -59,6 +61,14 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
         Instance = this;
     }
 
+    public override void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
+
+        base.OnDestroy();
+    }
+
     // ================================================================
     // LIFECYCLE — Khi NetworkObject được spawn
     // ================================================================
@@ -67,8 +77,9 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     {
         if (IsServer)
         {
-            // Server: bắt đầu game sau khi tất cả player đã join
-            StartCoroutine(WaitAndStartGame());
+            // The host spawns this object before every client has finished loading
+            // GameScene. Wait so the initial hand ClientRpc is not sent too early.
+            NetworkManager.SceneManager.OnLoadEventCompleted += HandleLoadEventCompleted;
         }
 
         // Cả server và client đều lắng nghe NetworkVariable thay đổi
@@ -81,6 +92,11 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
 
     public override void OnNetworkDespawn()
     {
+        if (IsServer && NetworkManager != null && NetworkManager.SceneManager != null)
+        {
+            NetworkManager.SceneManager.OnLoadEventCompleted -= HandleLoadEventCompleted;
+        }
+
         netCurrentPlayer.OnValueChanged -= OnCurrentPlayerChanged;
         netDirection.OnValueChanged -= OnDirectionChanged;
         netCurrentColor.OnValueChanged -= OnColorChanged;
@@ -88,13 +104,43 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
         netWaitingForWildColor.OnValueChanged -= OnWaitingForWildColorChanged;
     }
 
+    private void HandleLoadEventCompleted(
+        string sceneName,
+        LoadSceneMode loadSceneMode,
+        List<ulong> clientsCompleted,
+        List<ulong> clientsTimedOut)
+    {
+        if (sceneName != gameObject.scene.name)
+            return;
+
+        if (clientsTimedOut.Count > 0)
+        {
+            Debug.LogWarning(
+                $"[NetworkGameManager] {clientsTimedOut.Count} client(s) timed out loading {sceneName}.");
+        }
+
+        StartGameOnce();
+    }
+
+    private void StartGameOnce()
+    {
+        if (gameStarted)
+            return;
+
+        gameStarted = true;
+        StartCoroutine(WaitAndStartGame());
+    }
+
     /// <summary>
     /// Đợi PlayerIndexMapper có đủ player rồi bắt đầu.
     /// </summary>
     private IEnumerator WaitAndStartGame()
     {
-        // Đợi 1 frame để tất cả NetworkObject spawn xong
-        yield return null;
+        while (PlayerIndexMapper.Instance == null ||
+               !PlayerIndexMapper.Instance.IsSpawned)
+        {
+            yield return null;
+        }
 
         // Gán playerIndex cho tất cả clients
         PlayerIndexMapper.Instance.AssignAllPlayers();
@@ -103,6 +149,14 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
         // Đợi thêm 1 frame để NetworkList sync
         yield return null;
 
+        if (playerCount <= 0)
+        {
+            Debug.LogError("[NetworkGameManager] Cannot start round because no players were mapped.");
+            gameStarted = false;
+            yield break;
+        }
+
+        Debug.Log($"[NetworkGameManager] Starting round for {playerCount} players after all clients loaded GameScene.");
         InitializeMatchScores();
         StartRound();
     }
@@ -533,6 +587,10 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
         DealCards();
         StartDiscardPile();
 
+        Debug.Log(
+            $"[NetworkGameManager] Dealt {startingHandSize} cards to {playerCount} players. " +
+            $"Draw pile: {drawPile.Count}, discard pile: {discardPile.Count}.");
+
         // Sync state xuống tất cả clients
         SyncFullState();
 
@@ -735,6 +793,8 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
         }
 
         SendHandClientRpc(netCards, CreateTargetParams(clientId));
+        Debug.Log(
+            $"[NetworkGameManager] Sent {netCards.Length} cards to player {playerIndex}, clientId {clientId}.");
     }
 
     private void BroadcastOpponentHandCount(int playerIndex)

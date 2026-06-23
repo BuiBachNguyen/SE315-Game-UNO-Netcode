@@ -1,3 +1,4 @@
+using Unity.Netcode;
 using UnityEngine;
 
 /// <summary>
@@ -12,6 +13,14 @@ using UnityEngine;
 /// </summary>
 public class NetworkEventBridge : MonoBehaviour
 {
+    private static bool CanSendRpc()
+    {
+        return NetworkManager.Singleton != null
+            && NetworkManager.Singleton.IsListening
+            && NetworkGameManager.Instance != null
+            && NetworkGameManager.Instance.IsSpawned;
+    }
+
     private void OnEnable()
     {
         GameEvents.OnCardPlayed += HandleCardPlayed;
@@ -38,7 +47,7 @@ public class NetworkEventBridge : MonoBehaviour
 
     private void HandleCardPlayed(Card card)
     {
-        if (NetworkGameManager.Instance == null) return;
+        if (!CanSendRpc()) return;
 
         // Chuyển Card → NetworkCard rồi gửi lên server
         NetworkCard netCard = NetworkCard.FromCard(card);
@@ -47,37 +56,37 @@ public class NetworkEventBridge : MonoBehaviour
 
     private void HandleDrawCardRequested()
     {
-        if (NetworkGameManager.Instance == null) return;
+        if (!CanSendRpc()) return;
         NetworkGameManager.Instance.DrawCardServerRpc();
     }
 
     private void HandleColorSelected(CardColor color)
     {
-        if (NetworkGameManager.Instance == null) return;
+        if (!CanSendRpc()) return;
         NetworkGameManager.Instance.SelectColorServerRpc((byte)color);
     }
 
     private void HandleUnoCalled()
     {
-        if (NetworkGameManager.Instance == null) return;
+        if (!CanSendRpc()) return;
         NetworkGameManager.Instance.CallUnoServerRpc();
     }
 
     private void HandleCatchUno(int opponentIndex)
     {
-        if (NetworkGameManager.Instance == null) return;
+        if (!CanSendRpc()) return;
         NetworkGameManager.Instance.CatchUnoServerRpc(opponentIndex);
     }
 
     private void HandleNextRound()
     {
-        if (NetworkGameManager.Instance == null) return;
+        if (!CanSendRpc()) return;
         NetworkGameManager.Instance.NextRoundServerRpc();
     }
 
     private void HandleRematch()
     {
-        if (NetworkGameManager.Instance == null) return;
+        if (!CanSendRpc()) return;
         NetworkGameManager.Instance.RematchServerRpc();
     }
 }
