@@ -32,6 +32,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     private bool waitingForWildColor;
     private bool roundEnded;
     private bool matchEnded;
+    private bool waitingForInitialDeal;
     private Card pendingWildCard;
     private int pendingWildPlayer = -1;
     private int playerCount;
@@ -55,6 +56,8 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     private readonly List<Card> localHand = new List<Card>();
     private int localPlayerIndex = -1;
     private Card localTopDiscard;
+    private bool localInitialDealInProgress;
+    private readonly HashSet<ulong> initialDealReadyClients = new HashSet<ulong>();
 
     private void Awake()
     {
@@ -88,6 +91,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
         netCurrentColor.OnValueChanged += OnColorChanged;
         netDrawPileCount.OnValueChanged += OnDrawPileCountChanged;
         netWaitingForWildColor.OnValueChanged += OnWaitingForWildColorChanged;
+        GameEvents.OnInitialDealCompleted += HandleInitialDealCompleted;
     }
 
     public override void OnNetworkDespawn()
@@ -102,6 +106,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
         netCurrentColor.OnValueChanged -= OnColorChanged;
         netDrawPileCount.OnValueChanged -= OnDrawPileCountChanged;
         netWaitingForWildColor.OnValueChanged -= OnWaitingForWildColorChanged;
+        GameEvents.OnInitialDealCompleted -= HandleInitialDealCompleted;
     }
 
     private void HandleLoadEventCompleted(
@@ -191,7 +196,9 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
             localPlayerIndex = PlayerIndexMapper.Instance.GetLocalPlayerIndex();
 
         if (localPlayerIndex < 0) return false;
-        return netCurrentPlayer.Value == localPlayerIndex && !netWaitingForWildColor.Value;
+        return netCurrentPlayer.Value == localPlayerIndex
+            && !netWaitingForWildColor.Value
+            && !localInitialDealInProgress;
     }
 
     // ================================================================
@@ -237,7 +244,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
         int playerIndex = PlayerIndexMapper.Instance.GetPlayerIndex(senderId);
 
         // Validate: đúng lượt không?
-        if (playerIndex != currentPlayerIndex || waitingForWildColor)
+        if (waitingForInitialDeal || playerIndex != currentPlayerIndex || waitingForWildColor)
         {
             RejectPlayClientRpc(CreateTargetParams(senderId));
             return;
@@ -265,7 +272,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
         ulong senderId = rpcParams.Receive.SenderClientId;
         int playerIndex = PlayerIndexMapper.Instance.GetPlayerIndex(senderId);
 
-        if (playerIndex != currentPlayerIndex || waitingForWildColor) return;
+        if (waitingForInitialDeal || playerIndex != currentPlayerIndex || waitingForWildColor) return;
 
         Card drawn = DrawOneToHand(playerIndex);
         if (drawn == null) return;
@@ -383,6 +390,52 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
 
         // Raise event → HandView tự cập nhật UI
         GameEvents.RaiseHandUpdated(new List<Card>(localHand));
+    }
+
+    /// <summary>
+    /// Starts the presentation only after every client has received its final initial hand.
+    /// </summary>
+    [ClientRpc]
+    private void BeginInitialDealClientRpc(int cardsPerPlayer, int roundPlayerCount)
+    {
+        localInitialDealInProgress = true;
+
+        if (!GameEvents.RaiseInitialDealStarted(roundPlayerCount, cardsPerPlayer))
+        {
+            HandleInitialDealCompleted();
+        }
+    }
+
+    private void HandleInitialDealCompleted()
+    {
+        if (!localInitialDealInProgress || !IsClient)
+        {
+            return;
+        }
+
+        localInitialDealInProgress = false;
+        InitialDealReadyServerRpc();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void InitialDealReadyServerRpc(ServerRpcParams rpcParams = default)
+    {
+        if (!waitingForInitialDeal)
+        {
+            return;
+        }
+
+        ulong senderId = rpcParams.Receive.SenderClientId;
+        if (PlayerIndexMapper.Instance.GetPlayerIndex(senderId) < 0)
+        {
+            return;
+        }
+
+        initialDealReadyClients.Add(senderId);
+        if (initialDealReadyClients.Count >= playerCount)
+        {
+            FinishInitialDeal();
+        }
     }
 
     /// <summary>
@@ -563,6 +616,8 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     private void StartRound()
     {
         waitingForWildColor = false;
+        waitingForInitialDeal = true;
+        initialDealReadyClients.Clear();
         roundEnded = false;
         matchEnded = false;
         netWaitingForWildColor.Value = false;
@@ -600,6 +655,19 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
             SendHandToClient(i);
             BroadcastOpponentHandCount(i);
         }
+
+        BeginInitialDealClientRpc(startingHandSize, playerCount);
+    }
+
+    private void FinishInitialDeal()
+    {
+        if (!waitingForInitialDeal)
+        {
+            return;
+        }
+
+        waitingForInitialDeal = false;
+        netCurrentPlayer.Value = currentPlayerIndex;
 
         SyncPresentationClientRpc(
             currentPlayerIndex,
@@ -763,7 +831,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     private void SyncFullState()
     {
         netDrawPileCount.Value = drawPile.Count;
-        netCurrentPlayer.Value = currentPlayerIndex;
+        netCurrentPlayer.Value = waitingForInitialDeal ? -1 : currentPlayerIndex;
         netDirection.Value = direction;
         netCurrentColor.Value = (byte)currentColor;
 

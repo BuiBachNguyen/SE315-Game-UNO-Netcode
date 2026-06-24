@@ -111,6 +111,18 @@ public static class GameEvents
     /// </summary>
     public static event Action<float> OnTimerTick;
 
+    /// <summary>
+    /// Fired after the initial hands are available so UI can play the deal presentation.
+    /// Parameters are player count and cards per player.
+    /// </summary>
+    public static event Action<int, int> OnInitialDealStarted;
+
+    /// <summary>
+    /// Fired when the initial deal presentation finishes.
+    /// Game logic uses this callback to unlock the first turn.
+    /// </summary>
+    public static event Action OnInitialDealCompleted;
+
     public static void RaiseHandUpdated(List<Card> cards)
     {
         OnHandUpdated?.Invoke(cards);
@@ -214,5 +226,24 @@ public static class GameEvents
     public static void RaiseTimerTick(float timeRemaining)
     {
         OnTimerTick?.Invoke(timeRemaining);
+    }
+
+    /// <summary>
+    /// Returns false when no animator is present, allowing game logic to continue immediately.
+    /// </summary>
+    public static bool RaiseInitialDealStarted(int playerCount, int cardsPerPlayer)
+    {
+        if (OnInitialDealStarted == null)
+        {
+            return false;
+        }
+
+        OnInitialDealStarted.Invoke(playerCount, cardsPerPlayer);
+        return true;
+    }
+
+    public static void RaiseInitialDealCompleted()
+    {
+        OnInitialDealCompleted?.Invoke();
     }
 }
