@@ -152,10 +152,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1063693259}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 200, y: -100}
+  m_SizeDelta: {x: 400, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &16591031
 MonoBehaviour:
@@ -167,7 +167,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
   m_Navigation:
     m_Mode: 3
@@ -662,10 +662,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1063693259}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 200, y: -300}
+  m_SizeDelta: {x: 400, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &200459624
 MonoBehaviour:
@@ -1345,6 +1345,7 @@ GameObject:
   - component: {fileID: 653368615}
   - component: {fileID: 653368614}
   - component: {fileID: 653368613}
+  - component: {fileID: 653368617}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -1436,6 +1437,32 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &653368617
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 653368612}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e651f940a0b245249586677d4e8cf181, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::DealCardAnimator
+  dealDuration: 0.35
+  delayBetweenCards: 0.08
+  startScale: 1
+  randomRotationRange: 12
+  arcHeight: 45
+  cardSpacing: 28
+  deckTransform: {fileID: 1220984849}
+  playerHandParents:
+  - {fileID: 46667798}
+  - {fileID: 220989719}
+  - {fileID: 1979584301}
+  - {fileID: 76261797}
+  animationLayer: {fileID: 653368616}
+  cardBackPrefab: {fileID: 2509014141872411862, guid: ad0377c0ab0c21b48ad3eb1cda8a41f5, type: 3}
 --- !u!1001 &672358187
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1693,7 +1720,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 4360157255746360584, guid: 38444670bdf9b1a4db3c621befc814d5, type: 3}
+  m_Sprite: {fileID: -6135990259006530605, guid: 1d077deb93457394ea639e28fe4f5834, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -2674,7 +2701,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -1558256198040742725, guid: f1c22f589a1b9fd409869585bff5f819, type: 3}
+  m_Sprite: {fileID: 8721704259690680069, guid: 46777c479e5b1874ba7757d135258732, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -3072,10 +3099,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1063693259}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 600, y: -300}
+  m_SizeDelta: {x: 400, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1466740711
 MonoBehaviour:
@@ -3593,7 +3620,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1617059968
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4556,10 +4583,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1063693259}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 600, y: -100}
+  m_SizeDelta: {x: 400, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2142125577
 MonoBehaviour:

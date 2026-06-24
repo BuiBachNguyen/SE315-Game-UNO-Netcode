@@ -47,6 +47,7 @@ public class GameManager : MonoBehaviour, IGameLogic
     private CardColor currentColor = CardColor.Red;
 
     private bool waitingForWildColor;
+    private bool initialDealInProgress;
     private Card pendingWildCard;
     private int pendingWildPlayer = -1;
 
@@ -61,6 +62,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         GameEvents.OnCatchUno += HandleCatchUno;
         GameEvents.OnNextRoundRequested += HandleNextRoundRequested;
         GameEvents.OnRematchRequested += HandleRematchRequested;
+        GameEvents.OnInitialDealCompleted += HandleInitialDealCompleted;
     }
 
     private void OnDisable()
@@ -72,6 +74,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         GameEvents.OnCatchUno -= HandleCatchUno;
         GameEvents.OnNextRoundRequested -= HandleNextRoundRequested;
         GameEvents.OnRematchRequested -= HandleRematchRequested;
+        GameEvents.OnInitialDealCompleted -= HandleInitialDealCompleted;
     }
 
     private void Start()
@@ -135,7 +138,9 @@ public class GameManager : MonoBehaviour, IGameLogic
 
     public bool IsLocalPlayersTurn()
     {
-        return currentPlayerIndex == localPlayerIndex && !waitingForWildColor;
+        return currentPlayerIndex == localPlayerIndex
+            && !waitingForWildColor
+            && !initialDealInProgress;
     }
 
     private void InitializeMatchScores()
@@ -156,6 +161,7 @@ public class GameManager : MonoBehaviour, IGameLogic
         }
 
         waitingForWildColor = false;
+        initialDealInProgress = true;
         pendingWildCard = null;
         pendingWildPlayer = -1;
         unoCalledThisTurn.Clear();
@@ -177,6 +183,22 @@ public class GameManager : MonoBehaviour, IGameLogic
         DealCards();
         StartDiscardPile();
         BroadcastFullState();
+
+        if (!GameEvents.RaiseInitialDealStarted(playerCount, startingHandSize))
+        {
+            HandleInitialDealCompleted();
+        }
+    }
+
+    private void HandleInitialDealCompleted()
+    {
+        if (!initialDealInProgress)
+        {
+            return;
+        }
+
+        initialDealInProgress = false;
+        BroadcastTurnState();
         TryRunAiTurn();
     }
 
@@ -574,7 +596,6 @@ public class GameManager : MonoBehaviour, IGameLogic
         GameEvents.RaiseDiscardChanged(GetTopDiscard());
         GameEvents.RaiseColorChanged(currentColor);
         GameEvents.RaiseDirectionChanged(direction);
-        BroadcastTurnState();
         BroadcastLocalHand();
 
         for (int i = 0; i < playerCount; i++)
