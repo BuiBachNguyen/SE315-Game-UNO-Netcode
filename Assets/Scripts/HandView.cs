@@ -115,8 +115,8 @@ public class HandView : MonoBehaviour
             return;
         }
 
-        // Keep every card fully visible. Only raycast/interactions follow the turn.
-        handCanvasGroup.alpha = 1f;
+        // DealCardAnimator owns visibility during the initial deal.
+        // This view only controls whether the hand receives input.
         handCanvasGroup.interactable = canInteract;
         handCanvasGroup.blocksRaycasts = canInteract;
     }
