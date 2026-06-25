@@ -10,8 +10,10 @@ public class HandView : MonoBehaviour
 
     private IGameLogic gameLogic;
     private AdaptiveCardHandLayout handLayout;
+    private CanvasGroup handCanvasGroup;
     private readonly List<CardView> activeViews = new List<CardView>();
     private readonly Stack<CardView> pooledViews = new Stack<CardView>();
+    private readonly List<Card> currentCards = new List<Card>();
 
     private void Awake()
     {
@@ -27,12 +29,21 @@ public class HandView : MonoBehaviour
         }
 
         if (handContainer != null)
+        {
             handLayout = handContainer.GetComponent<AdaptiveCardHandLayout>();
+            handCanvasGroup = handContainer.GetComponent<CanvasGroup>();
+            if (handCanvasGroup == null)
+            {
+                handCanvasGroup = handContainer.gameObject.AddComponent<CanvasGroup>();
+            }
+        }
     }
 
     private void OnEnable()
     {
         GameEvents.OnHandUpdated += HandleHandUpdated;
+        GameEvents.OnTurnChanged += HandlePlayStateChanged;
+        GameEvents.OnColorChanged += HandlePlayStateChanged;
 
         if (gameLogicBehaviour is NetworkGameManager networkGameManager)
             networkGameManager.RefreshLocalHand();
@@ -41,9 +52,32 @@ public class HandView : MonoBehaviour
     private void OnDisable()
     {
         GameEvents.OnHandUpdated -= HandleHandUpdated;
+        GameEvents.OnTurnChanged -= HandlePlayStateChanged;
+        GameEvents.OnColorChanged -= HandlePlayStateChanged;
     }
 
     private void HandleHandUpdated(List<Card> cards)
+    {
+        currentCards.Clear();
+        if (cards != null)
+        {
+            currentCards.AddRange(cards);
+        }
+
+        RebuildHand();
+    }
+
+    private void HandlePlayStateChanged(int playerIndex)
+    {
+        RebuildHand();
+    }
+
+    private void HandlePlayStateChanged(CardColor color)
+    {
+        RebuildHand();
+    }
+
+    private void RebuildHand()
     {
         // Recycle existing views before creating or reusing new ones.
         for (int i = 0; i < activeViews.Count; i++)
@@ -52,24 +86,39 @@ public class HandView : MonoBehaviour
         }
         activeViews.Clear();
 
-        if (cards == null || handContainer == null || cardViewPrefab == null)
+        if (handContainer == null || cardViewPrefab == null)
         {
             return;
         }
 
-        for (int i = 0; i < cards.Count; i++)
+        bool canInteract = gameLogic != null && gameLogic.IsLocalPlayersTurn();
+        UpdateHandInteraction(canInteract);
+
+        for (int i = 0; i < currentCards.Count; i++)
         {
-            Card card = cards[i];
+            Card card = currentCards[i];
             CardView view = GetFromPool();
-            bool playable = gameLogic != null && gameLogic.IsValidPlay(card);
 
             view.transform.SetParent(handContainer, false);
             view.transform.SetSiblingIndex(i);
-            view.Setup(card, playable);
+            view.Setup(card, canInteract);
             activeViews.Add(view);
         }
 
         handLayout?.RefreshLayout();
+    }
+
+    private void UpdateHandInteraction(bool canInteract)
+    {
+        if (handCanvasGroup == null)
+        {
+            return;
+        }
+
+        // Keep every card fully visible. Only raycast/interactions follow the turn.
+        handCanvasGroup.alpha = 1f;
+        handCanvasGroup.interactable = canInteract;
+        handCanvasGroup.blocksRaycasts = canInteract;
     }
 
     private CardView GetFromPool()

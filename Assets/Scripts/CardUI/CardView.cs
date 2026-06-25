@@ -1,69 +1,78 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
-using TMPro;
 using UnityEngine.UI;
 
 public class CardView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField] private Image cardImage;
-    [SerializeField] private Image highlight;
     [SerializeField] private Button button;
     [SerializeField] private CanvasGroup canvasGroup;
     [SerializeField] private CardSpriteMap cardSpriteMap;
-    [SerializeField] private GameObject tooltipRoot;
-    [SerializeField] private TMP_Text tooltipText;
     [SerializeField] private float hoverOffset = 25f;
     [SerializeField] private float hoverScale = 1.05f;
 
     private Card cardData;
-    private bool isPlayable;
+    private bool canInteract;
     private bool isHovered;
     private Vector2 layoutPosition;
     private RectTransform rectTransform;
     private Canvas hoverCanvas;
+    private GraphicRaycaster graphicRaycaster;
 
     private void Awake()
     {
         rectTransform = transform as RectTransform;
         hoverCanvas = GetComponent<Canvas>();
         if (hoverCanvas == null)
+        {
             hoverCanvas = gameObject.AddComponent<Canvas>();
+        }
+
+        graphicRaycaster = GetComponent<GraphicRaycaster>();
+        if (graphicRaycaster == null)
+        {
+            graphicRaycaster = gameObject.AddComponent<GraphicRaycaster>();
+        }
 
         if (button != null)
         {
             button.onClick.AddListener(HandleClick);
-        }
 
-        if (tooltipRoot != null)
-        {
-            tooltipRoot.SetActive(false);
+            ColorBlock colors = button.colors;
+            colors.disabledColor = Color.white;
+            button.colors = colors;
         }
     }
 
-    public void Setup(Card card, bool playable)
+    public void Setup(Card card, bool allowInteraction)
     {
         cardData = card;
-        isPlayable = playable;
+        canInteract = allowInteraction;
+        isHovered = false;
 
         if (cardSpriteMap != null && cardImage != null)
         {
             cardImage.sprite = cardSpriteMap.GetSprite(card.Color, card.Type, card.Number);
         }
 
-        if (highlight != null)
-        {
-            highlight.gameObject.SetActive(isPlayable);
-        }
-
         if (button != null)
         {
-            button.interactable = isPlayable;
+            button.interactable = canInteract;
         }
 
         if (canvasGroup != null)
         {
-            canvasGroup.alpha = isPlayable ? 1f : 0.75f;
+            canvasGroup.alpha = 1f;
+            canvasGroup.interactable = canInteract;
+            canvasGroup.blocksRaycasts = canInteract;
         }
+
+        if (graphicRaycaster != null)
+        {
+            graphicRaycaster.enabled = canInteract;
+        }
+
+        ApplyHoverState();
     }
 
     public void SetLayoutPosition(Vector2 position)
@@ -74,25 +83,19 @@ public class CardView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 
     public void OnPointerEnter(PointerEventData eventData)
     {
+        if (!canInteract)
+        {
+            return;
+        }
+
         isHovered = true;
         ApplyHoverState();
-
-        if (!isPlayable && tooltipRoot != null && tooltipText != null)
-        {
-            tooltipText.text = "Match color/number/action";
-            tooltipRoot.SetActive(true);
-        }
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
         isHovered = false;
         ApplyHoverState();
-
-        if (tooltipRoot != null)
-        {
-            tooltipRoot.SetActive(false);
-        }
     }
 
     private void OnDisable()
@@ -100,10 +103,9 @@ public class CardView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
         isHovered = false;
 
         if (hoverCanvas != null)
+        {
             hoverCanvas.overrideSorting = false;
-
-        if (tooltipRoot != null)
-            tooltipRoot.SetActive(false);
+        }
     }
 
     private void ApplyHoverState()
@@ -113,23 +115,25 @@ public class CardView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 
         if (rectTransform != null)
         {
-            rectTransform.anchoredPosition = layoutPosition +
-                (isHovered ? Vector2.up * hoverOffset : Vector2.zero);
-            rectTransform.localScale = isHovered
+            bool shouldHover = canInteract && isHovered;
+            rectTransform.anchoredPosition = layoutPosition
+                + (shouldHover ? Vector2.up * hoverOffset : Vector2.zero);
+            rectTransform.localScale = shouldHover
                 ? Vector3.one * hoverScale
                 : Vector3.one;
         }
 
         if (hoverCanvas != null)
         {
-            hoverCanvas.overrideSorting = isHovered;
-            hoverCanvas.sortingOrder = isHovered ? 100 : 0;
+            bool shouldHover = canInteract && isHovered;
+            hoverCanvas.overrideSorting = shouldHover;
+            hoverCanvas.sortingOrder = shouldHover ? 100 : 0;
         }
     }
 
     private void HandleClick()
     {
-        if (cardData == null)
+        if (!canInteract || cardData == null)
         {
             return;
         }
