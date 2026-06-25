@@ -648,6 +648,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
 
         // Sync state xuống tất cả clients
         SyncFullState();
+        BeginInitialDealClientRpc(startingHandSize, playerCount);
 
         // Gửi bài riêng cho từng client
         for (int i = 0; i < playerCount; i++)
@@ -656,7 +657,6 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
             BroadcastOpponentHandCount(i);
         }
 
-        BeginInitialDealClientRpc(startingHandSize, playerCount);
     }
 
     private void FinishInitialDeal()
