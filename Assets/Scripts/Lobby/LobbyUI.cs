@@ -219,6 +219,8 @@ public class LobbyUI : MonoBehaviour
             await LobbyService.Instance
                 .JoinLobbyByIdAsync(lobbyId);
 
+        UnityServiceInit.TrackJoinedLobby(lobby.Id);
+
         string joinCode =
             lobby.Data["joinCode"].Value;
 
