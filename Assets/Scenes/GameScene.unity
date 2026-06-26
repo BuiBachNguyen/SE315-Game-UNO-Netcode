@@ -2910,7 +2910,7 @@ MonoBehaviour:
   cardSpriteMap: {fileID: 11400000, guid: ca21103ae053e0644b819795d26e4b45, type: 2}
   cardContainer: {fileID: 220989719}
   cardBackPrefab: {fileID: 2509014141872411862, guid: ad0377c0ab0c21b48ad3eb1cda8a41f5, type: 3}
-  opponentPlayerIndex: 3
+  opponentPlayerIndex: 1
 --- !u!1 &1376771653
 GameObject:
   m_ObjectHideFlags: 0
@@ -3904,7 +3904,7 @@ MonoBehaviour:
   cardSpriteMap: {fileID: 11400000, guid: ca21103ae053e0644b819795d26e4b45, type: 2}
   cardContainer: {fileID: 76261797}
   cardBackPrefab: {fileID: 2509014141872411862, guid: ad0377c0ab0c21b48ad3eb1cda8a41f5, type: 3}
-  opponentPlayerIndex: 1
+  opponentPlayerIndex: 3
 --- !u!1 &1916288977
 GameObject:
   m_ObjectHideFlags: 0
