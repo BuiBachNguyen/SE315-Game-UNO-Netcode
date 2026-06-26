@@ -11,6 +11,9 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public class NetworkGameManager : NetworkBehaviour, IGameLogic
 {
+    const string LoadingGameMessage = "Loading game...";
+    const string DealingCardsMessage = "Dealing cards...";
+
     public static NetworkGameManager Instance { get; private set; }
 
     [Header("Rules")]
@@ -78,6 +81,9 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
 
     public override void OnNetworkSpawn()
     {
+        if (IsClient)
+            SceneLoadingOverlay.Show(LoadingGameMessage);
+
         if (IsServer)
         {
             // The host spawns this object before every client has finished loading
@@ -107,6 +113,8 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
         netDrawPileCount.OnValueChanged -= OnDrawPileCountChanged;
         netWaitingForWildColor.OnValueChanged -= OnWaitingForWildColorChanged;
         GameEvents.OnInitialDealCompleted -= HandleInitialDealCompleted;
+
+        SceneLoadingOverlay.Hide();
     }
 
     private void HandleLoadEventCompleted(
@@ -399,6 +407,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     private void BeginInitialDealClientRpc(int cardsPerPlayer, int roundPlayerCount)
     {
         localInitialDealInProgress = true;
+        SceneLoadingOverlay.SetMessage(DealingCardsMessage);
 
         if (!GameEvents.RaiseInitialDealStarted(roundPlayerCount, cardsPerPlayer))
         {
@@ -414,6 +423,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
         }
 
         localInitialDealInProgress = false;
+        SceneLoadingOverlay.Hide();
         InitialDealReadyServerRpc();
     }
 
