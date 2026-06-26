@@ -12,9 +12,15 @@ using Unity.Multiplayer.Playmode;
 
 public class UnityServiceInit : MonoBehaviour
 {
+    const int QuitCleanupTimeoutMs = 2000;
+
     static Task initializationTask;
+    static string currentLobbyId;
     static string hostedLobbyId;
     static bool heartbeatRunning;
+    static bool isLeavingLobby;
+
+    bool isQuitting;
 
     async void Awake()
     {
@@ -83,10 +89,88 @@ public class UnityServiceInit : MonoBehaviour
 
     public static void StartLobbyHeartbeat(string lobbyId)
     {
+        TrackJoinedLobby(lobbyId);
         hostedLobbyId = lobbyId;
 
         if (!heartbeatRunning)
             _ = RunHeartbeatAsync();
+    }
+
+    public static void TrackJoinedLobby(string lobbyId)
+    {
+        currentLobbyId = lobbyId;
+    }
+
+    public static async Task LeaveCurrentLobbyAsync()
+    {
+        if (string.IsNullOrEmpty(currentLobbyId))
+            return;
+
+        if (isLeavingLobby)
+            return;
+
+        isLeavingLobby = true;
+
+        try
+        {
+            await EnsureInitializedAsync();
+
+            string lobbyId = currentLobbyId;
+            bool isHostLobby = lobbyId == hostedLobbyId;
+
+            currentLobbyId = null;
+            if (isHostLobby)
+                hostedLobbyId = null;
+
+            if (isHostLobby)
+            {
+                await LobbyService.Instance.DeleteLobbyAsync(lobbyId);
+            }
+            else
+            {
+                await LobbyService.Instance.RemovePlayerAsync(
+                    lobbyId,
+                    AuthenticationService.Instance.PlayerId);
+            }
+        }
+        catch (LobbyServiceException exception)
+        {
+            Debug.LogWarning(exception);
+        }
+        finally
+        {
+            isLeavingLobby = false;
+        }
+    }
+
+    void OnApplicationQuit()
+    {
+        isQuitting = true;
+        CleanupLobbyOnQuit();
+    }
+
+    void OnDestroy()
+    {
+        if (isQuitting)
+            CleanupLobbyOnQuit();
+    }
+
+    void CleanupLobbyOnQuit()
+    {
+        if (string.IsNullOrEmpty(currentLobbyId))
+            return;
+
+        try
+        {
+            Task leaveTask = LeaveCurrentLobbyAsync();
+
+            if (!leaveTask.IsCompleted)
+                leaveTask.Wait(QuitCleanupTimeoutMs);
+        }
+        catch (Exception exception)
+        {
+            Debug.LogWarning(exception);
+        }
     }
 
     static async Task RunHeartbeatAsync()
