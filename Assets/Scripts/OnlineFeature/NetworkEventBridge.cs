@@ -25,6 +25,7 @@ public class NetworkEventBridge : MonoBehaviour
     {
         GameEvents.OnCardPlayed += HandleCardPlayed;
         GameEvents.OnDrawCardRequested += HandleDrawCardRequested;
+        GameEvents.OnDrawnCardDeclined += HandleDrawnCardDeclined;
         GameEvents.OnColorSelected += HandleColorSelected;
         GameEvents.OnUnoCalled += HandleUnoCalled;
         GameEvents.OnCatchUno += HandleCatchUno;
@@ -36,6 +37,7 @@ public class NetworkEventBridge : MonoBehaviour
     {
         GameEvents.OnCardPlayed -= HandleCardPlayed;
         GameEvents.OnDrawCardRequested -= HandleDrawCardRequested;
+        GameEvents.OnDrawnCardDeclined -= HandleDrawnCardDeclined;
         GameEvents.OnColorSelected -= HandleColorSelected;
         GameEvents.OnUnoCalled -= HandleUnoCalled;
         GameEvents.OnCatchUno -= HandleCatchUno;
@@ -58,6 +60,12 @@ public class NetworkEventBridge : MonoBehaviour
     {
         if (!CanSendRpc()) return;
         NetworkGameManager.Instance.DrawCardServerRpc();
+    }
+
+    private void HandleDrawnCardDeclined()
+    {
+        if (!CanSendRpc()) return;
+        NetworkGameManager.Instance.DeclineDrawnCardServerRpc();
     }
 
     private void HandleColorSelected(CardColor color)

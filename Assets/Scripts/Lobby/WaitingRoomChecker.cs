@@ -8,6 +8,7 @@ using UnityEngine.UI;
 public class WaitingRoomChecker : NetworkBehaviour
 {
     const int LeaveRoomNetworkFlushDelayMs = 150;
+    const string LoadingGameMessage = "Loading game...";
 
     [Min(1)]
     public int requiredPlayers = 4;
@@ -128,6 +129,7 @@ public class WaitingRoomChecker : NetworkBehaviour
     async Task LeaveRoomAsync()
     {
         isLeavingRoom = true;
+        SceneLoadingOverlay.Hide();
 
         ChatManager.Instance?.SendLocalLeaveRoomMessage();
         await Task.Delay(LeaveRoomNetworkFlushDelayMs);
@@ -160,6 +162,7 @@ public class WaitingRoomChecker : NetworkBehaviour
             return;
 
         isLeavingRoom = true;
+        SceneLoadingOverlay.Hide();
 
         if (NetworkManager.Singleton != null)
             NetworkManager.Singleton.Shutdown();
@@ -175,6 +178,7 @@ public class WaitingRoomChecker : NetworkBehaviour
         if (clientId != NetworkManager.ServerClientId)
             return;
 
+        SceneLoadingOverlay.Hide();
         NetworkManager.Singleton.Shutdown();
         SceneManager.LoadScene(lobbySceneName);
     }
@@ -268,9 +272,17 @@ public class WaitingRoomChecker : NetworkBehaviour
         int currentPlayers = NetworkManager.Singleton.ConnectedClientsList.Count;
         Debug.Log($"START GAME with {currentPlayers} players");
 
+        ShowGameLoadingClientRpc();
+
         NetworkManager.Singleton.SceneManager.LoadScene(
             gameSceneName,
             LoadSceneMode.Single);
+    }
+
+    [ClientRpc]
+    void ShowGameLoadingClientRpc()
+    {
+        SceneLoadingOverlay.Show(LoadingGameMessage);
     }
 
     [ClientRpc]

@@ -48,7 +48,9 @@ public class GameManager : MonoBehaviour, IGameLogic
 
     private bool waitingForWildColor;
     private bool initialDealInProgress;
+    private bool waitingForDrawnCardDecision;
     private Card pendingWildCard;
+    private Card pendingDrawnCard;
     private int pendingWildPlayer = -1;
 
     private Coroutine aiTurnRoutine;
@@ -57,6 +59,7 @@ public class GameManager : MonoBehaviour, IGameLogic
     {
         GameEvents.OnCardPlayed += HandleCardPlayed;
         GameEvents.OnDrawCardRequested += HandleDrawCardRequested;
+        GameEvents.OnDrawnCardDeclined += HandleDrawnCardDeclined;
         GameEvents.OnColorSelected += HandleColorSelected;
         GameEvents.OnUnoCalled += HandleUnoCalled;
         GameEvents.OnCatchUno += HandleCatchUno;
@@ -69,6 +72,7 @@ public class GameManager : MonoBehaviour, IGameLogic
     {
         GameEvents.OnCardPlayed -= HandleCardPlayed;
         GameEvents.OnDrawCardRequested -= HandleDrawCardRequested;
+        GameEvents.OnDrawnCardDeclined -= HandleDrawnCardDeclined;
         GameEvents.OnColorSelected -= HandleColorSelected;
         GameEvents.OnUnoCalled -= HandleUnoCalled;
         GameEvents.OnCatchUno -= HandleCatchUno;
@@ -99,6 +103,11 @@ public class GameManager : MonoBehaviour, IGameLogic
         if (card == null || waitingForWildColor)
         {
             return false;
+        }
+
+        if (waitingForDrawnCardDecision)
+        {
+            return IsSameCard(card, pendingDrawnCard);
         }
 
         Card top = GetTopDiscard();
@@ -162,7 +171,9 @@ public class GameManager : MonoBehaviour, IGameLogic
 
         waitingForWildColor = false;
         initialDealInProgress = true;
+        waitingForDrawnCardDecision = false;
         pendingWildCard = null;
+        pendingDrawnCard = null;
         pendingWildPlayer = -1;
         unoCalledThisTurn.Clear();
         direction = 1;
@@ -291,6 +302,12 @@ public class GameManager : MonoBehaviour, IGameLogic
             return;
         }
 
+        if (waitingForDrawnCardDecision && !IsSameCard(playedCard, pendingDrawnCard))
+        {
+            BroadcastLocalHand();
+            return;
+        }
+
         List<Card> localHand = hands[localPlayerIndex];
         Card handCard = FindAndRemoveCard(localHand, playedCard);
         if (handCard == null || !IsValidPlayForPlayer(handCard, localPlayerIndex))
@@ -303,6 +320,8 @@ public class GameManager : MonoBehaviour, IGameLogic
             return;
         }
 
+        waitingForDrawnCardDecision = false;
+        pendingDrawnCard = null;
         ProcessPlayedCard(localPlayerIndex, handCard);
     }
 
@@ -354,7 +373,7 @@ public class GameManager : MonoBehaviour, IGameLogic
 
     private void HandleDrawCardRequested()
     {
-        if (!IsLocalPlayersTurn() || waitingForWildColor)
+        if (!IsLocalPlayersTurn() || waitingForWildColor || waitingForDrawnCardDecision)
         {
             return;
         }
@@ -366,15 +385,40 @@ public class GameManager : MonoBehaviour, IGameLogic
         }
 
         bool playable = IsValidPlayForPlayer(drawn, localPlayerIndex);
+        if (playable)
+        {
+            waitingForDrawnCardDecision = true;
+            pendingDrawnCard = drawn;
+        }
+
         BroadcastLocalHand();
         GameEvents.RaiseCardDrawn(drawn, playable);
 
-        if (!playable)
+        if (playable)
+        {
+            return;
+        }
+        else
         {
             MoveToNextPlayer(1);
             BroadcastTurnState();
             TryRunAiTurn();
         }
+    }
+
+    private void HandleDrawnCardDeclined()
+    {
+        if (!waitingForDrawnCardDecision || !IsLocalPlayersTurn())
+        {
+            return;
+        }
+
+        waitingForDrawnCardDecision = false;
+        pendingDrawnCard = null;
+
+        MoveToNextPlayer(1);
+        BroadcastTurnState();
+        TryRunAiTurn();
     }
 
     private void HandleColorSelected(CardColor color)
