@@ -10,6 +10,12 @@ using UnityEngine;
 public class LobbyUI : MonoBehaviour
 {
     const int MaxPlayers = 4;
+    const string RelayConnectionType =
+#if UNITY_WEBGL && !UNITY_EDITOR
+        "wss";
+#else
+        "dtls";
+#endif
 
     string currentJoinCode;
     public Transform roomContainer;
@@ -60,6 +66,8 @@ public class LobbyUI : MonoBehaviour
 
     public async Task CreateRoomAsync()
     {
+        await UnityServiceInit.EnsureInitializedAsync();
+
         string randomId = UnityEngine.Random.Range(100000, 999999).ToString();
         string hostName = "Player";
         if (PlayerData.Instance != null && !string.IsNullOrEmpty(PlayerData.Instance.PlayerName))
@@ -83,12 +91,12 @@ public class LobbyUI : MonoBehaviour
             NetworkManager.Singleton
             .GetComponent<UnityTransport>();
 
-        transport.SetHostRelayData(
-            allocation.RelayServer.IpV4,
-            (ushort)allocation.RelayServer.Port,
-            allocation.AllocationIdBytes,
-            allocation.Key,
-            allocation.ConnectionData);
+        transport.UseWebSockets =
+            RelayConnectionType.StartsWith("ws");
+
+        transport.SetRelayServerData(
+            allocation.ToRelayServerData(
+                RelayConnectionType));
 
         // 3️⃣ tạo lobby
         var options = new CreateLobbyOptions
@@ -135,6 +143,8 @@ public class LobbyUI : MonoBehaviour
 
     public async Task JoinRelayAsync(string joinCode)
     {
+        await UnityServiceInit.EnsureInitializedAsync();
+
         var joinAllocation =
             await RelayService.Instance
                 .JoinAllocationAsync(joinCode);
@@ -143,13 +153,12 @@ public class LobbyUI : MonoBehaviour
             NetworkManager.Singleton
             .GetComponent<UnityTransport>();
 
-        transport.SetClientRelayData(
-            joinAllocation.RelayServer.IpV4,
-            (ushort)joinAllocation.RelayServer.Port,
-            joinAllocation.AllocationIdBytes,
-            joinAllocation.Key,
-            joinAllocation.ConnectionData,
-            joinAllocation.HostConnectionData);
+        transport.UseWebSockets =
+            RelayConnectionType.StartsWith("ws");
+
+        transport.SetRelayServerData(
+            joinAllocation.ToRelayServerData(
+                RelayConnectionType));
 
         NetworkManager.Singleton.StartClient();
     }
@@ -170,6 +179,8 @@ public class LobbyUI : MonoBehaviour
 
     private async Task RefreshRoomListAsync()
     {
+        await UnityServiceInit.EnsureInitializedAsync();
+
         foreach (Transform child in roomContainer)
             Destroy(child.gameObject);
 
@@ -202,6 +213,8 @@ public class LobbyUI : MonoBehaviour
 
     public async Task JoinLobbyByIdAsync(string lobbyId)
     {
+        await UnityServiceInit.EnsureInitializedAsync();
+
         Lobby lobby =
             await LobbyService.Instance
                 .JoinLobbyByIdAsync(lobbyId);
@@ -214,6 +227,8 @@ public class LobbyUI : MonoBehaviour
 
     public async void JoinLobbyRandomly()
     {
+        await UnityServiceInit.EnsureInitializedAsync();
+
         QueryResponse response =
             await LobbyService.Instance
         .QueryLobbiesAsync();
@@ -240,6 +255,8 @@ public class LobbyUI : MonoBehaviour
 
     public async void SearchRoom(string searchQuery)
     {
+        await UnityServiceInit.EnsureInitializedAsync();
+
         if (string.IsNullOrEmpty(searchQuery))
         {
             RefreshRoomList();
