@@ -76,20 +76,38 @@ public class ChatManager : NetworkBehaviour
         ReceiveChatMessageClientRpc(playerName, message, senderId);
     }
 
+    //[ClientRpc]
+    //private void ReceiveChatMessageClientRpc(string playerName, string message, ulong senderClientId)
+    //{
+    //    if (chatHistoryText != null)
+    //    {
+    //        // Xác định xem người gửi có phải là mình (LocalClient) không
+    //        bool isMe = senderClientId == NetworkManager.Singleton.LocalClientId;
+
+    //        // Màu Xanh cho mình, màu Cam Đỏ cho đối phương
+    //        string nameColor = isMe ? "#1D4ED8" : "#D97706"; 
+    //        string msgColor = "#000000"; // Đen
+
+    //        // Thêm nội dung chat có hỗ trợ Rich Text (Màu sắc, in đậm)
+    //        chatHistoryText.text += $"<color={nameColor}><b>{playerName}</b></color> <color={msgColor}>:</color> <color={msgColor}>{message}</color>\n";
+    //    }
+    //}
     [ClientRpc]
     private void ReceiveChatMessageClientRpc(string playerName, string message, ulong senderClientId)
     {
         if (chatHistoryText != null)
         {
-            // Xác định xem người gửi có phải là mình (LocalClient) không
             bool isMe = senderClientId == NetworkManager.Singleton.LocalClientId;
-            
-            // Màu Xanh cho mình, màu Cam Đỏ cho đối phương
-            string nameColor = isMe ? "#1D4ED8" : "#D97706"; 
-            string msgColor = "#000000"; // Đen
 
-            // Thêm nội dung chat có hỗ trợ Rich Text (Màu sắc, in đậm)
-            chatHistoryText.text += $"<color={nameColor}><b>{playerName}</b></color> <color={msgColor}>:</color> <color={msgColor}>{message}</color>\n";
+            string displayName = isMe ? "Me" : playerName;
+
+            string nameColor = isMe ? "#1D4ED8" : "#D97706";
+            string msgColor = "#000000";
+
+            chatHistoryText.text +=
+                $"<color={nameColor}><b>{displayName}</b></color> " +
+                $"<color={msgColor}>:</color> " +
+                $"<color={msgColor}>{message}</color>\n";
         }
     }
 }
