@@ -98,10 +98,11 @@ public class HandView : MonoBehaviour
         {
             Card card = currentCards[i];
             CardView view = GetFromPool();
+            bool canPlayCard = canInteract && gameLogic.IsValidPlay(card);
 
             view.transform.SetParent(handContainer, false);
             view.transform.SetSiblingIndex(i);
-            view.Setup(card, canInteract);
+            view.Setup(card, canPlayCard);
             activeViews.Add(view);
         }
 

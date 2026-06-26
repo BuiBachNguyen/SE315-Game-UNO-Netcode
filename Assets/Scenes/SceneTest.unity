@@ -2344,7 +2344,8 @@ MonoBehaviour:
   popupText: {fileID: 1519727818}
   yesButton: {fileID: 56106745}
   noButton: {fileID: 2031079906}
-  popupDuration: 3
+  popupDuration: 7
+  popupSortingOrder: 32000
 --- !u!1 &1360329242
 GameObject:
   m_ObjectHideFlags: 0

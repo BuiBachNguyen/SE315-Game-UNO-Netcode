@@ -13,11 +13,14 @@ public class DrawPileView : MonoBehaviour
     [SerializeField] private TMP_Text popupText;
     [SerializeField] private Button yesButton;
     [SerializeField] private Button noButton;
-    [SerializeField] private float popupDuration = 3f;
+    [SerializeField] private float popupDuration = 7f;
+    [SerializeField] private int popupSortingOrder = 32000;
 
     private IGameLogic gameLogic;
     private Coroutine popupRoutine;
     private Card pendingCard;
+    private bool isAwaitingDrawDecision;
+    private Canvas popupCanvas;
 
     private void Awake()
     {
@@ -73,7 +76,9 @@ public class DrawPileView : MonoBehaviour
             return;
         }
 
-        drawButton.interactable = gameLogic != null && gameLogic.IsLocalPlayersTurn();
+        drawButton.interactable = gameLogic != null
+            && gameLogic.IsLocalPlayersTurn()
+            && !isAwaitingDrawDecision;
     }
 
     private void HandleDrawClicked()
@@ -89,6 +94,9 @@ public class DrawPileView : MonoBehaviour
         }
 
         pendingCard = card;
+        isAwaitingDrawDecision = true;
+        UpdateInteractable();
+
         if (popupText != null)
         {
             popupText.text = "Play this card?";
@@ -104,6 +112,7 @@ public class DrawPileView : MonoBehaviour
 
     private IEnumerator PopupCountdown()
     {
+        ConfigurePopupSorting();
         popupRoot.SetActive(true);
         float timer = popupDuration;
 
@@ -113,7 +122,7 @@ public class DrawPileView : MonoBehaviour
             yield return null;
         }
 
-        ClosePopup();
+        ClosePopup(true);
     }
 
     private void HandlePlayYes()
@@ -123,16 +132,18 @@ public class DrawPileView : MonoBehaviour
             GameEvents.RaiseCardPlayed(pendingCard);
         }
 
-        ClosePopup();
+        ClosePopup(false);
     }
 
     private void HandlePlayNo()
     {
-        ClosePopup();
+        ClosePopup(true);
     }
 
-    private void ClosePopup()
+    private void ClosePopup(bool declineDrawnCard)
     {
+        bool shouldDecline = declineDrawnCard && pendingCard != null;
+
         if (popupRoutine != null)
         {
             StopCoroutine(popupRoutine);
@@ -140,9 +151,51 @@ public class DrawPileView : MonoBehaviour
         }
 
         pendingCard = null;
+        isAwaitingDrawDecision = false;
         if (popupRoot != null)
         {
+            ConfigurePopupSorting();
             popupRoot.SetActive(false);
+        }
+
+        UpdateInteractable();
+
+        if (shouldDecline)
+        {
+            GameEvents.RaiseDrawnCardDeclined();
+        }
+    }
+
+    private void ConfigurePopupSorting()
+    {
+        if (popupRoot == null)
+        {
+            return;
+        }
+
+        Canvas rootCanvas = popupRoot.GetComponentInParent<Canvas>()?.rootCanvas;
+        if (rootCanvas != null && popupRoot.transform.parent != rootCanvas.transform)
+        {
+            popupRoot.transform.SetParent(rootCanvas.transform, true);
+        }
+
+        popupRoot.transform.SetAsLastSibling();
+
+        if (popupCanvas == null)
+        {
+            popupCanvas = popupRoot.GetComponent<Canvas>();
+            if (popupCanvas == null)
+            {
+                popupCanvas = popupRoot.AddComponent<Canvas>();
+            }
+        }
+
+        popupCanvas.overrideSorting = true;
+        popupCanvas.sortingOrder = popupSortingOrder;
+
+        if (popupRoot.GetComponent<GraphicRaycaster>() == null)
+        {
+            popupRoot.AddComponent<GraphicRaycaster>();
         }
     }
 }

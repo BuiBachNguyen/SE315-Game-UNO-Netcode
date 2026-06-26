@@ -36,8 +36,11 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     private bool roundEnded;
     private bool matchEnded;
     private bool waitingForInitialDeal;
+    private bool waitingForDrawnCardDecision;
     private Card pendingWildCard;
+    private Card pendingDrawnCard;
     private int pendingWildPlayer = -1;
+    private int pendingDrawnPlayer = -1;
     private int playerCount;
     private bool gameStarted;
 
@@ -60,6 +63,8 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     private int localPlayerIndex = -1;
     private Card localTopDiscard;
     private bool localInitialDealInProgress;
+    private bool localWaitingForDrawnCardDecision;
+    private Card localPendingDrawnCard;
     private readonly HashSet<ulong> initialDealReadyClients = new HashSet<ulong>();
 
     private void Awake()
@@ -217,6 +222,12 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     {
         if (card == null || waitingForWildColor) return false;
 
+        if (IsServer && waitingForDrawnCardDecision)
+            return IsSameCard(card, pendingDrawnCard);
+
+        if (!IsServer && localWaitingForDrawnCardDecision)
+            return IsSameCard(card, localPendingDrawnCard);
+
         Card top = IsServer ? GetTopDiscard() : localTopDiscard;
         if (top == null) return true;
 
@@ -258,6 +269,13 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
             return;
         }
 
+        if (waitingForDrawnCardDecision &&
+            (playerIndex != pendingDrawnPlayer || !IsSameCard(netCard, pendingDrawnCard)))
+        {
+            RejectPlayClientRpc(CreateTargetParams(senderId));
+            return;
+        }
+
         // Tìm bài trong hand server
         Card card = FindCardInHand(hands[playerIndex], netCard);
         if (card == null || !IsValidPlayCheck(card))
@@ -268,6 +286,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
 
         // OK — xử lý bài đánh
         hands[playerIndex].Remove(card);
+        ClearPendingDrawnCardDecision();
         ProcessPlayedCard(playerIndex, card);
     }
 
@@ -280,7 +299,13 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
         ulong senderId = rpcParams.Receive.SenderClientId;
         int playerIndex = PlayerIndexMapper.Instance.GetPlayerIndex(senderId);
 
-        if (waitingForInitialDeal || playerIndex != currentPlayerIndex || waitingForWildColor) return;
+        if (waitingForInitialDeal ||
+            playerIndex != currentPlayerIndex ||
+            waitingForWildColor ||
+            waitingForDrawnCardDecision)
+        {
+            return;
+        }
 
         Card drawn = DrawOneToHand(playerIndex);
         if (drawn == null) return;
@@ -294,11 +319,33 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
         // Cập nhật hand count cho tất cả
         BroadcastOpponentHandCount(playerIndex);
 
-        if (!playable)
+        if (playable)
+        {
+            waitingForDrawnCardDecision = true;
+            pendingDrawnCard = drawn;
+            pendingDrawnPlayer = playerIndex;
+        }
+        else
         {
             MoveToNextPlayer(1);
             SyncTurnState();
         }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void DeclineDrawnCardServerRpc(ServerRpcParams rpcParams = default)
+    {
+        if (!waitingForDrawnCardDecision)
+            return;
+
+        ulong senderId = rpcParams.Receive.SenderClientId;
+        int playerIndex = PlayerIndexMapper.Instance.GetPlayerIndex(senderId);
+        if (playerIndex != currentPlayerIndex || playerIndex != pendingDrawnPlayer)
+            return;
+
+        ClearPendingDrawnCardDecision();
+        MoveToNextPlayer(1);
+        SyncTurnState();
     }
 
     /// <summary>
@@ -457,6 +504,12 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
         Card card = netCard.ToCard();
         localTopDiscard = card;
 
+        if (IsSameCard(card, localPendingDrawnCard))
+        {
+            localWaitingForDrawnCardDecision = false;
+            localPendingDrawnCard = null;
+        }
+
         // Cập nhật discard pile trên UI
         GameEvents.RaiseDiscardChanged(card);
 
@@ -490,6 +543,9 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     {
         Card card = netCard.ToCard();
         localHand.Add(card);
+
+        localWaitingForDrawnCardDecision = isPlayable;
+        localPendingDrawnCard = isPlayable ? card : null;
 
         GameEvents.RaiseHandUpdated(new List<Card>(localHand));
         GameEvents.RaiseCardDrawn(card, isPlayable);
@@ -579,6 +635,13 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     private void OnCurrentPlayerChanged(int oldVal, int newVal)
     {
         unoCalledThisTurn.Clear(); // local clear
+
+        if (newVal != localPlayerIndex)
+        {
+            localWaitingForDrawnCardDecision = false;
+            localPendingDrawnCard = null;
+        }
+
         GameEvents.RaiseTurnChanged(newVal);
 
         // Refresh hand highlight (playable state có thể thay đổi)
@@ -627,12 +690,15 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     {
         waitingForWildColor = false;
         waitingForInitialDeal = true;
+        waitingForDrawnCardDecision = false;
         initialDealReadyClients.Clear();
         roundEnded = false;
         matchEnded = false;
         netWaitingForWildColor.Value = false;
         pendingWildCard = null;
+        pendingDrawnCard = null;
         pendingWildPlayer = -1;
+        pendingDrawnPlayer = -1;
         unoCalledThisTurn.Clear();
         direction = 1;
         currentPlayerIndex = 0;
@@ -1035,6 +1101,23 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
                 return card;
         }
         return null;
+    }
+
+    private void ClearPendingDrawnCardDecision()
+    {
+        waitingForDrawnCardDecision = false;
+        pendingDrawnCard = null;
+        pendingDrawnPlayer = -1;
+    }
+
+    private static bool IsSameCard(NetworkCard netCard, Card card)
+    {
+        return card != null && netCard.Id == card.NetworkId;
+    }
+
+    private static bool IsSameCard(Card first, Card second)
+    {
+        return first != null && second != null && first.NetworkId == second.NetworkId;
     }
 
     private static int GetCardPoints(Card card)

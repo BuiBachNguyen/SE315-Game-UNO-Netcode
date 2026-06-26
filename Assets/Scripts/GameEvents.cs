@@ -92,6 +92,11 @@ public static class GameEvents
     public static event Action OnDrawCardRequested;
 
     /// <summary>
+    /// Fired when the local player chooses not to play a playable card they just drew.
+    /// </summary>
+    public static event Action OnDrawnCardDeclined;
+
+    /// <summary>
     /// Fired when the UI requests to start the next round.
     /// </summary>
     public static event Action OnNextRoundRequested;
@@ -206,6 +211,11 @@ public static class GameEvents
     public static void RaiseDrawCardRequested()
     {
         OnDrawCardRequested?.Invoke();
+    }
+
+    public static void RaiseDrawnCardDeclined()
+    {
+        OnDrawnCardDeclined?.Invoke();
     }
 
     public static void RaiseNextRoundRequested()
