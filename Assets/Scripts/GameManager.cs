@@ -81,7 +81,7 @@ public class GameManager : MonoBehaviour, IGameLogic
     {
         InitializeMatchScores();
         StartRound();
-        SoundManager.Instance.ChangeBackGroundMusic("ShuffleUP");
+        SoundManager.Instance.ChangeBackGroundMusic("GameBackGroundMusic");
     }
 
     public bool IsValidPlay(Card card)
