@@ -50,6 +50,8 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: bdcfc060834898b4783f8c8d47a2bc9f, type: 3}
   - name: MenuBackGroundMusic
     clip: {fileID: 8300000, guid: 33bc5ab93edc1f94b8a910078593e0ec, type: 3}
+  - name: ShuffleUP
+    clip: {fileID: 8300000, guid: 33bc5ab93edc1f94b8a910078593e0ec, type: 3}
   SoundEffects:
   - name: Draw
     clip: {fileID: 8300000, guid: 07b30c18ae2e0d47898478a00bea44b9, type: 3}

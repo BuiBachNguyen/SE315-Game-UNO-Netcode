@@ -1,11 +1,14 @@
-using NUnit.Framework;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(AudioSource))]
 public class SoundManager : MonoBehaviour
 {
+    private const string DrawSoundEffectName = "Draw";
+
     #region Singleton
     private static SoundManager _instance;
+    private AudioSource audioSource;
 
     public static SoundManager Instance
     {
@@ -18,6 +21,7 @@ public class SoundManager : MonoBehaviour
                 {
                     GameObject go = new GameObject("SoundManager");
                     _instance = go.AddComponent<SoundManager>();
+                    Debug.LogWarning("[SoundManager] Created a runtime SoundManager because no prefab instance was found.");
                 }
             }
             return _instance;
@@ -25,12 +29,25 @@ public class SoundManager : MonoBehaviour
     }
     void Awake()
     {
-        var soundManagers = FindObjectsByType<SoundManager>(FindObjectsSortMode.None);
-        for(int i=1; i < soundManagers.Length; i++)
+        if (_instance != null && _instance != this)
         {
-            Destroy(soundManagers[i].gameObject);
+            Destroy(gameObject);
+            return;
         }
-        DontDestroyOnLoad(soundManagers[0].gameObject);
+
+        _instance = this;
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+        }
+
+        if (transform.parent != null)
+        {
+            transform.SetParent(null);
+        }
+
+        DontDestroyOnLoad(gameObject);
     }
     #endregion
 
@@ -41,41 +58,73 @@ public class SoundManager : MonoBehaviour
         public string name;
         public AudioClip clip;
     }
-    [SerializeField] private List<SoundPair> BackGroundMusic;
+    [SerializeField] private List<SoundPair> BackGroundMusic = new List<SoundPair>();
     private string currentBackGroundMusic;
-    [SerializeField] private List<SoundPair> SoundEffects;
+    [SerializeField] private List<SoundPair> SoundEffects = new List<SoundPair>();
 
     public void ChangeBackGroundMusic(string name)
     {
+        if (BackGroundMusic == null)
+        {
+            Debug.LogWarning("[SoundManager] Background music catalog is missing.");
+            return;
+        }
+
         foreach (var pair in BackGroundMusic)
         {
             if (pair.name == name)
             {
+                if (pair.clip == null)
+                {
+                    Debug.LogWarning($"[SoundManager] Background music '{name}' has no AudioClip.");
+                    return;
+                }
+
+                if (currentBackGroundMusic == name && audioSource.isPlaying)
+                {
+                    return;
+                }
+
                 currentBackGroundMusic = name;
-                GetComponent<AudioSource>().clip = pair.clip;
-                GetComponent<AudioSource>().Play();
-                GetComponent<AudioSource>().loop = true;
+                audioSource.clip = pair.clip;
+                audioSource.loop = true;
+                audioSource.Play();
                 return;
             }
         }
+
+        Debug.LogWarning($"[SoundManager] Background music '{name}' was not found.");
     }
 
     public void PlaySoundEffect(string name)
     {
+        if (SoundEffects == null)
+        {
+            Debug.LogWarning("[SoundManager] Sound effect catalog is missing.");
+            return;
+        }
+
         foreach (var pair in SoundEffects)
         {
             if (pair.name == name)
             {
-                GetComponent<AudioSource>().PlayOneShot(pair.clip);
+                if (pair.clip == null)
+                {
+                    Debug.LogWarning($"[SoundManager] Sound effect '{name}' has no AudioClip.");
+                    return;
+                }
+
+                audioSource.PlayOneShot(pair.clip);
                 return;
             }
         }
+
+        Debug.LogWarning($"[SoundManager] Sound effect '{name}' was not found.");
+    }
+
+    public void PlayDrawVfx()
+    {
+        PlaySoundEffect(DrawSoundEffectName);
     }
     #endregion
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-   
 }

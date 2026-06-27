@@ -13,6 +13,7 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
 {
     const string LoadingGameMessage = "Loading game...";
     const string DealingCardsMessage = "Dealing cards...";
+    const string GameBackgroundMusicName = "ShuffleUP";
 
     public static NetworkGameManager Instance { get; private set; }
 
@@ -87,7 +88,10 @@ public class NetworkGameManager : NetworkBehaviour, IGameLogic
     public override void OnNetworkSpawn()
     {
         if (IsClient)
+        {
+            SoundManager.Instance.ChangeBackGroundMusic(GameBackgroundMusicName);
             SceneLoadingOverlay.Show(LoadingGameMessage);
+        }
 
         if (IsServer)
         {

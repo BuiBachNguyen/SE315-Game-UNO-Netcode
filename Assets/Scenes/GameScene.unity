@@ -4093,6 +4093,7 @@ GameObject:
   - component: {fileID: 1940310554}
   - component: {fileID: 1940310557}
   - component: {fileID: 1940310558}
+  - component: {fileID: 1940310559}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -4181,6 +4182,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ad292916812feb4ab0ebfaafb6d4608, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NetworkEventBridge
+--- !u!114 &1940310559
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1940310553}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db681cdb18c61df4d8d18fcd9d8dc102, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SoundPlay
+  bgmName: GameBackGroundMusic
 --- !u!1 &1979584300
 GameObject:
   m_ObjectHideFlags: 0

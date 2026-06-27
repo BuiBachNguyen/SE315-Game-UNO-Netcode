@@ -85,12 +85,18 @@ public class DealCardAnimator : MonoBehaviour
                     cardIndex,
                     cardsPerPlayer);
 
+                dealSequence.InsertCallback(startTime, PlayDrawVfx);
                 dealSequence.Insert(startTime, cardTween);
                 dealOrder++;
             }
         }
 
         dealSequence.OnComplete(CompleteDeal);
+    }
+
+    private void PlayDrawVfx()
+    {
+        SoundManager.Instance.PlayDrawVfx();
     }
 
     private bool CanAnimate(int seatCount, int cardsPerPlayer)
